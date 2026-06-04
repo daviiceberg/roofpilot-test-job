@@ -1244,10 +1244,13 @@ textarea,
   min-width: 0;
 }
 
-/* card-chevron — rightmost toggle icon */
-.card-chevron {
+/* card-chevron-plain — matches Insurance/Job Details collapse style */
+.card-chevron-plain {
   flex-shrink: 0;
-  color: var(--muted);
+}
+
+.card-open .card-chevron-plain {
+  transform: rotate(180deg);
 }
 
 /* remove bottom gap when card is collapsed */

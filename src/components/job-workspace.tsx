@@ -1007,7 +1007,7 @@ function ContactsCard({
   const total = contacts.length + 1;
 
   return (
-    <section className="surface side-card contacts-card flow-order-7">
+    <section className={`surface side-card contacts-card flow-order-7${open ? " card-open" : ""}`}>
       <div className="panel-head" data-collapsed={!open ? "true" : undefined}>
         <button type="button" className="collapsible-title-btn" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
           <div className="panel-title-group">
@@ -1015,13 +1015,13 @@ function ContactsCard({
             <span className="count-pill">{total}</span>
           </div>
         </button>
-        <button className="text-link" type="button" onClick={openDrawer}>
-          <Plus size={14} aria-hidden="true" />
-          Add
-        </button>
-        <button type="button" className="icon-button card-chevron" onClick={() => setOpen((v) => !v)}>
-          <ChevronDown size={15} style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }} />
-        </button>
+        {open && (
+          <button className="text-link" type="button" onClick={openDrawer}>
+            <Plus size={14} aria-hidden="true" />
+            Add
+          </button>
+        )}
+        <ChevronDown size={15} className="collapse-chevron card-chevron-plain" aria-hidden="true" onClick={() => setOpen((v) => !v)} style={{ cursor: "pointer" }} />
       </div>
       {open && (
         <div className="contacts-body">
@@ -1211,7 +1211,7 @@ function DescriptionCard() {
   const [value, setValue] = useState("");
 
   return (
-    <section className="surface side-card description-card flow-order-10">
+    <section className={`surface side-card description-card flow-order-10${open ? " card-open" : ""}`}>
       <div className="panel-head" data-collapsed={!open ? "true" : undefined}>
         <button type="button" className="collapsible-title-btn" onClick={() => { if (!editing) setOpen((v) => !v); }} aria-expanded={open}>
           <h2 className="section-title">Description</h2>
@@ -1221,9 +1221,7 @@ function DescriptionCard() {
             <Pencil size={14} />
           </button>
         )}
-        <button type="button" className="icon-button card-chevron" onClick={() => { if (!editing) setOpen((v) => !v); }}>
-          <ChevronDown size={15} style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }} />
-        </button>
+        <ChevronDown size={15} className="collapse-chevron card-chevron-plain" aria-hidden="true" onClick={() => { if (!editing) setOpen((v) => !v); }} style={{ cursor: "pointer" }} />
       </div>
       {open && (
         editing ? (
@@ -1267,7 +1265,7 @@ function TagsCard() {
   }
 
   return (
-    <section className="surface side-card tags-card flow-order-11">
+    <section className={`surface side-card tags-card flow-order-11${open ? " card-open" : ""}`}>
       <div className="panel-head" data-collapsed={!open ? "true" : undefined}>
         <button type="button" className="collapsible-title-btn" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
           <div className="panel-title-group">
@@ -1278,13 +1276,13 @@ function TagsCard() {
             {tags.length > 0 && <span className="count-pill">{tags.length}</span>}
           </div>
         </button>
-        <button className="text-link" type="button" onClick={() => { setOpen(true); setAdding(true); }}>
-          <Plus size={14} aria-hidden="true" />
-          Add tag
-        </button>
-        <button type="button" className="icon-button card-chevron" onClick={() => setOpen((v) => !v)}>
-          <ChevronDown size={15} style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }} />
-        </button>
+        {open && (
+          <button className="text-link" type="button" onClick={() => { setOpen(true); setAdding(true); }}>
+            <Plus size={14} aria-hidden="true" />
+            Add tag
+          </button>
+        )}
+        <ChevronDown size={15} className="collapse-chevron card-chevron-plain" aria-hidden="true" onClick={() => setOpen((v) => !v)} style={{ cursor: "pointer" }} />
       </div>
       {open && (
         <div className="tags-list">
