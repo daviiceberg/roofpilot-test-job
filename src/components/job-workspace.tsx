@@ -1008,26 +1008,19 @@ function ContactsCard({
 
   return (
     <section className="surface side-card contacts-card flow-order-7">
-      <div className="panel-head">
-        <button
-          type="button"
-          className="collapsible-header-btn"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-        >
+      <div className="panel-head" data-collapsed={!open ? "true" : undefined}>
+        <button type="button" className="collapsible-title-btn" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
           <div className="panel-title-group">
             <h2 className="section-title">Contacts</h2>
             <span className="count-pill">{total}</span>
           </div>
-          <ChevronDown
-            size={15}
-            className="collapse-chevron"
-            style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }}
-          />
         </button>
         <button className="text-link" type="button" onClick={openDrawer}>
           <Plus size={14} aria-hidden="true" />
           Add
+        </button>
+        <button type="button" className="icon-button card-chevron" onClick={() => setOpen((v) => !v)}>
+          <ChevronDown size={15} style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }} />
         </button>
       </div>
       {open && (
@@ -1219,25 +1212,18 @@ function DescriptionCard() {
 
   return (
     <section className="surface side-card description-card flow-order-10">
-      <div className="panel-head">
-        <button
-          type="button"
-          className="collapsible-header-btn"
-          onClick={() => { if (!editing) setOpen((v) => !v); }}
-          aria-expanded={open}
-        >
+      <div className="panel-head" data-collapsed={!open ? "true" : undefined}>
+        <button type="button" className="collapsible-title-btn" onClick={() => { if (!editing) setOpen((v) => !v); }} aria-expanded={open}>
           <h2 className="section-title">Description</h2>
-          <ChevronDown
-            size={15}
-            className="collapse-chevron"
-            style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }}
-          />
         </button>
         {open && !editing && value && (
           <button className="icon-button" type="button" onClick={() => setEditing(true)} aria-label="Edit description">
             <Pencil size={14} />
           </button>
         )}
+        <button type="button" className="icon-button card-chevron" onClick={() => { if (!editing) setOpen((v) => !v); }}>
+          <ChevronDown size={15} style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }} />
+        </button>
       </div>
       {open && (
         editing ? (
@@ -1282,13 +1268,8 @@ function TagsCard() {
 
   return (
     <section className="surface side-card tags-card flow-order-11">
-      <div className="panel-head">
-        <button
-          type="button"
-          className="collapsible-header-btn"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-        >
+      <div className="panel-head" data-collapsed={!open ? "true" : undefined}>
+        <button type="button" className="collapsible-title-btn" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
           <div className="panel-title-group">
             <h2 className="section-title">
               <Tag size={14} aria-hidden="true" />
@@ -1296,15 +1277,13 @@ function TagsCard() {
             </h2>
             {tags.length > 0 && <span className="count-pill">{tags.length}</span>}
           </div>
-          <ChevronDown
-            size={15}
-            className="collapse-chevron"
-            style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }}
-          />
         </button>
-        <button className="text-link" type="button" onClick={(e) => { e.stopPropagation(); setOpen(true); setAdding(true); }}>
+        <button className="text-link" type="button" onClick={() => { setOpen(true); setAdding(true); }}>
           <Plus size={14} aria-hidden="true" />
           Add tag
+        </button>
+        <button type="button" className="icon-button card-chevron" onClick={() => setOpen((v) => !v)}>
+          <ChevronDown size={15} style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }} />
         </button>
       </div>
       {open && (

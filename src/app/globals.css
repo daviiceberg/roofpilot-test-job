@@ -1230,12 +1230,11 @@ textarea,
 .ai-phone .ai-icon { color: var(--blue); background: var(--blue-soft); }
 .ai-alert .ai-icon { color: var(--amber); background: var(--amber-soft); }
 
-/* collapsible-header-btn — for Contacts/Description/Tags toggle */
-.collapsible-header-btn {
+/* collapsible-title-btn — clickable title area for Contacts/Description/Tags */
+.collapsible-title-btn {
   display: flex;
   flex: 1;
   align-items: center;
-  justify-content: space-between;
   gap: 6px;
   background: none;
   border: 0;
@@ -1243,6 +1242,17 @@ textarea,
   text-align: left;
   cursor: pointer;
   min-width: 0;
+}
+
+/* card-chevron — rightmost toggle icon */
+.card-chevron {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+/* remove bottom gap when card is collapsed */
+.panel-head[data-collapsed="true"] {
+  margin-bottom: 0;
 }
 
 .contacts-body {
