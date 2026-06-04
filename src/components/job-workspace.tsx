@@ -201,7 +201,7 @@ export function JobWorkspace() {
           <div className="left-rail">
             {activeTab === "overview" && (
               <>
-                <FinancialSummary onCreateProposal={() => showToast("✓ Proposal draft started")} />
+                <FinancialSummary />
                 <ActivityComposer
                   selectedMode={selectedMode}
                   setSelectedMode={setSelectedMode}
@@ -306,29 +306,11 @@ export function JobWorkspace() {
 }
 
 /* ── Financial Summary ─────────────────────────────────────────── */
-function FinancialSummary({ onCreateProposal }: { onCreateProposal: () => void }) {
-  const items = [
-    {
-      label: "Estimate",
-      value: "$18,450",
-      status: "In Review",
-      statusClass: "fin-status-review",
-      action: null
-    },
-    {
-      label: "Proposal",
-      value: "—",
-      status: "Not issued",
-      statusClass: "fin-status-pending",
-      action: { label: "Create Proposal", onClick: onCreateProposal }
-    },
-    {
-      label: "Invoice",
-      value: "—",
-      status: "Not created",
-      statusClass: "fin-status-pending",
-      action: null
-    }
+function FinancialSummary() {
+  const items: { label: string; value: string; status: string; statusClass: string }[] = [
+    { label: "Estimate", value: "$18,450", status: "In Review",   statusClass: "fin-status-review" },
+    { label: "Proposal", value: "—",       status: "Not issued",  statusClass: "fin-status-pending" },
+    { label: "Invoice",  value: "—",       status: "Not created", statusClass: "fin-status-pending" },
   ];
 
   return (
@@ -343,11 +325,6 @@ function FinancialSummary({ onCreateProposal }: { onCreateProposal: () => void }
             <div className="fin-right">
               {item.value !== "—" && <strong className="fin-value">{item.value}</strong>}
               <span className={`fin-status ${item.statusClass}`}>{item.status}</span>
-              {item.action && (
-                <button className="text-link fin-action" type="button" onClick={item.action.onClick}>
-                  {item.action.label}
-                </button>
-              )}
             </div>
           </div>
         ))}
@@ -958,7 +935,7 @@ function AiRecommendations({ onAction }: { onAction: (action: AiAction) => void 
         Engagement is <strong>warm</strong> with clear buying signals. Hannah has opened the estimate email 3× and replied within the hour. Momentum is strong — sending the proposal now significantly increases close probability.
       </p>
 
-      {/* Recommended next step — title + body left, CTA right */}
+      {/* Recommended next step */}
       <div className="ai-primary">
         <div className="ai-primary-left">
           <span className="ai-primary-eyebrow">
@@ -968,25 +945,13 @@ function AiRecommendations({ onAction }: { onAction: (action: AiAction) => void 
           <strong className="ai-primary-title">Proposal is ready to send.</strong>
           <p className="text-secondary ai-primary-body">Email opened 3× · high intent.</p>
         </div>
-        <button
-          type="button"
-          className="button primary compact ai-primary-cta"
-          onClick={() => onAction("proposal")}
-        >
-          <FileCheck2 size={14} aria-hidden="true" />
-          Create Proposal
-        </button>
       </div>
 
-      {/* Contextual data — integrated below */}
+      {/* Contextual data */}
       <div className="ai-insight">
         <div className="ai-insight-row">
           <span className="text-secondary">Best follow-up window</span>
           <strong className="ai-insight-value">2 PM – 5 PM</strong>
-        </div>
-        <div className="ai-insight-row">
-          <span className="text-secondary">Potential value</span>
-          <strong className="ai-insight-value">$18,450</strong>
         </div>
         <div className="ai-insight-row">
           <span className="text-secondary">Close probability</span>
@@ -1342,7 +1307,7 @@ function TagsCard() {
           />
         )}
         {!tags.length && !adding && (
-          <p className="text-secondary" style={{ fontSize: "12px" }}>No tags added.</p>
+          <span className="text-secondary" style={{ fontSize: "12px" }}>None added</span>
         )}
       </div>
     </section>
@@ -2035,10 +2000,6 @@ function MobileChrome({
 }) {
   return (
     <>
-      <button type="button" className="mobile-proposal-fab">
-        <FileCheck2 size={18} aria-hidden="true" />
-        Create Proposal
-      </button>
       <nav className="mobile-action-bar" aria-label="Quick actions">
         {(Object.keys(actionConfig) as ComposerMode[]).map((mode) => {
           const item = actionConfig[mode] as { label: string; icon: typeof FileCheck2 };
