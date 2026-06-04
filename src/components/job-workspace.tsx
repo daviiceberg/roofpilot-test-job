@@ -256,12 +256,10 @@ export function JobWorkspace() {
             />
             <TasksCard tasks={tasks} completeTask={completeTask} openTaskDrawer={() => setIsTaskDrawerOpen(true)} />
             <ContactsCard contacts={contacts} openDrawer={() => setIsDrawerOpen(true)} />
-            <DescriptionCard />
-            <TagsCard />
             <CollapsibleCard
               title="Insurance"
               subtitle="State Farm · $1,500 ded. · CLM-582741"
-              className="insurance-card flow-order-8"
+              className="insurance-card flow-order-10"
               defaultOpen={false}
             >
               <InsuranceFields />
@@ -269,11 +267,13 @@ export function JobWorkspace() {
             <CollapsibleCard
               title="Job Details"
               subtitle="Arch. Shingle · Hail damage · 2,400 sq ft"
-              className="job-details-card metadata-card flow-order-9"
+              className="job-details-card metadata-card flow-order-11"
               defaultOpen={false}
             >
               <JobDetailsFields />
             </CollapsibleCard>
+            <DescriptionCard />
+            <TagsCard />
           </aside>
         </section>
 
@@ -381,6 +381,7 @@ function JobHero({ onCreateProposal, labels = [] }: { onCreateProposal: () => vo
                 <span className="engagement-dot" />
                 Warm lead
               </span>
+              {labels.length > 0 && <span className="badge-separator" aria-hidden="true">|</span>}
               {labels.map((label) => (
                 <span key={label} className="job-label-chip">{label}</span>
               ))}
@@ -394,7 +395,7 @@ function JobHero({ onCreateProposal, labels = [] }: { onCreateProposal: () => vo
             <strong className="hero-stat">84%</strong>
           </div>
           <div className="hero-metric highlight">
-            <span className="text-label">Potential revenue</span>
+            <span className="text-label">Estimate value</span>
             <strong className="hero-stat">$18,450</strong>
           </div>
           <div className="hero-metric">
@@ -416,8 +417,9 @@ function JobHero({ onCreateProposal, labels = [] }: { onCreateProposal: () => vo
             <CircleDollarSign size={15} aria-hidden="true" />
             Invoice
           </button>
-          <button type="button" className="icon-button" aria-label="Material order" title="Material Order">
-            <PackageCheck size={17} />
+          <button type="button" className="button secondary">
+            <PackageCheck size={15} aria-hidden="true" />
+            Material order
           </button>
         </div>
       </div>
@@ -477,7 +479,7 @@ function ContentTabBar({
     { id: "measurements", label: "Measurements" },
     { id: "proposals",    label: "Proposals",    count: proposalCount },
     { id: "documents",    label: "Documents",    count: documentCount },
-    { id: "invoices",     label: "Invoices" },
+    { id: "invoices",     label: "Invoices",     count: 0 },
     { id: "production",   label: "Production",   count: productionCount }
   ];
 
@@ -685,10 +687,7 @@ function ActivityComposer({
   return (
     <section className="surface composer-panel flow-order-4">
       <div className="panel-head">
-        <div>
-          <h2 className="section-title">Log Activity</h2>
-          <p className="composer-prompt text-secondary">What would you like to add to this job?</p>
-        </div>
+        <h2 className="section-title">Log Activity</h2>
       </div>
       <div className="segmented" role="tablist" aria-label="Activity type">
         {(Object.keys(actionConfig) as ComposerMode[]).map((mode) => {
@@ -750,6 +749,10 @@ function ActivityComposer({
               </label>
               <label>
                 <span className="text-label">Message</span>
+                <span className="suggested-draft-label">
+                  <Sparkles size={11} aria-hidden="true" />
+                  Suggested draft
+                </span>
                 <textarea name="message" className="composer-textarea" defaultValue={emailDefaults.message} />
               </label>
             </>
@@ -761,6 +764,10 @@ function ActivityComposer({
               </label>
               <label>
                 <span className="text-label">Message</span>
+                <span className="suggested-draft-label">
+                  <Sparkles size={11} aria-hidden="true" />
+                  Suggested draft
+                </span>
                 <textarea name="message" className="composer-textarea" defaultValue={messageDefault} />
               </label>
             </>
@@ -834,10 +841,7 @@ function ActivityTimeline({
   return (
     <section className="surface timeline-panel flow-order-5">
       <div className="panel-head">
-        <div>
-          <h2 className="section-title">Activity timeline</h2>
-          <p className="text-meta">Chronological record of everything on this job</p>
-        </div>
+        <h2 className="section-title">Activity timeline</h2>
       </div>
 
       <div className="filter-row" role="tablist" aria-label="Filter timeline">
@@ -921,7 +925,7 @@ function ProgressCard() {
 /* ── AI Insight ─────────────────────────────────────────────────── */
 function AiRecommendations({ onAction }: { onAction: (action: AiAction) => void }) {
   return (
-    <section className="surface side-card ai-card flow-order-3">
+    <section className="surface side-card ai-card flow-order-7">
       <h2 className="section-title ai-card-title">
         <Sparkles size={15} aria-hidden="true" />
         AI Insight
@@ -938,9 +942,8 @@ function AiRecommendations({ onAction }: { onAction: (action: AiAction) => void 
             <Zap size={11} aria-hidden="true" />
             Recommended next step
           </span>
-          <button type="button" className="text-link ai-cta-link" onClick={() => onAction("proposal")}>
-            <Plus size={13} aria-hidden="true" />
-            Create Proposal
+          <button type="button" className="ai-cta-link" onClick={() => onAction("proposal")}>
+            → Create Proposal
           </button>
         </div>
         <p className="ai-step-title">Proposal is ready to send.</p>
@@ -995,7 +998,7 @@ function ContactsCard({
   const total = contacts.length + 1;
 
   return (
-    <section className={`surface side-card contacts-card collapsible flow-order-7${open ? " open" : ""}`}>
+    <section className={`surface side-card contacts-card collapsible flow-order-9${open ? " open" : ""}`}>
       <button type="button" className="collapse-trigger" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
         <div className="collapse-heading-group">
           <h2 className="section-title">
@@ -1042,7 +1045,7 @@ function TasksCard({
   openTaskDrawer: () => void;
 }) {
   return (
-    <section className="surface side-card tasks-card flow-order-6">
+    <section className="surface side-card tasks-card flow-order-8">
       <div className="panel-head">
         <div className="panel-title-group">
           <h2 className="section-title">Today&apos;s tasks</h2>
@@ -1207,13 +1210,13 @@ function DescriptionCard() {
   const [value, setValue] = useState("");
 
   return (
-    <section className={`surface side-card description-card collapsible flow-order-10${open ? " open" : ""}`}>
+    <section className={`surface side-card description-card collapsible flow-order-12${open ? " open" : ""}`}>
       <button type="button" className="collapse-trigger" onClick={() => { if (!editing) setOpen((v) => !v); }} aria-expanded={open}>
         <div className="collapse-heading-group">
           <h2 className="section-title">Description</h2>
-          {!open && (
+          {!open && value && (
             <p className="collapse-subtitle">
-              {value ? value.slice(0, 52) + (value.length > 52 ? "…" : "") : "No description"}
+              {value.slice(0, 52) + (value.length > 52 ? "…" : "")}
             </p>
           )}
         </div>
@@ -1261,16 +1264,16 @@ function TagsCard() {
   }
 
   return (
-    <section className={`surface side-card tags-card collapsible flow-order-11${open ? " open" : ""}`}>
+    <section className={`surface side-card tags-card collapsible flow-order-13${open ? " open" : ""}`}>
       <button type="button" className="collapse-trigger" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
         <div className="collapse-heading-group">
           <h2 className="section-title">
             Tags
             {tags.length > 0 && <span className="count-pill">{tags.length}</span>}
           </h2>
-          {!open && (
+          {!open && tags.length > 0 && (
             <p className="collapse-subtitle">
-              {tags.length > 0 ? tags.slice(0, 3).join(" · ") : "No tags"}
+              {tags.slice(0, 3).join(" · ")}
             </p>
           )}
         </div>
