@@ -1230,36 +1230,30 @@ textarea,
 .ai-phone .ai-icon { color: var(--blue); background: var(--blue-soft); }
 .ai-alert .ai-icon { color: var(--amber); background: var(--amber-soft); }
 
-/* collapsible-title-btn — clickable title area for Contacts/Description/Tags */
-.collapsible-title-btn {
+/* collapse-card-row — flex row wrapping trigger + optional action button */
+.collapse-card-row {
   display: flex;
-  flex: 1;
   align-items: center;
-  gap: 6px;
-  background: none;
-  border: 0;
-  padding: 0;
-  text-align: left;
-  cursor: pointer;
+  gap: 10px;
+}
+
+.collapse-card-row .collapse-trigger {
+  flex: 1;
   min-width: 0;
 }
 
-/* card-chevron-plain — matches Insurance/Job Details collapse style */
-.card-chevron-plain {
+.collapse-card-action {
   flex-shrink: 0;
-}
-
-.card-open .card-chevron-plain {
-  transform: rotate(180deg);
-}
-
-/* remove bottom gap when card is collapsed */
-.panel-head[data-collapsed="true"] {
-  margin-bottom: 0;
 }
 
 .contacts-body {
   margin-top: 8px;
+}
+
+.card-action-right {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 6px;
 }
 
 /* Contacts */
@@ -1389,9 +1383,13 @@ textarea,
   font-weight: 500;
 }
 
-.insurance-card,
-.job-details-card,
-.contacts-card {
+/* All collapsible side-cards: uniform padding when closed,
+   slightly tighter at bottom when open */
+.side-card.collapsible {
+  padding-bottom: var(--space-card);
+}
+
+.side-card.collapsible.open {
   padding-bottom: 10px;
 }
 
@@ -1439,6 +1437,10 @@ textarea,
 }
 
 .collapse-body {
+  padding-top: 0;
+}
+
+.collapsible.open .collapse-body {
   padding-top: 10px;
 }
 
@@ -2620,9 +2622,6 @@ textarea,
 }
 
 /* ── Description Card ──────────────────────────────────────────── */
-.description-card .panel-head {
-  margin-bottom: 4px;
-}
 
 .description-preview {
   display: block;
@@ -2664,9 +2663,6 @@ textarea,
 }
 
 /* ── Tags Card ──────────────────────────────────────────────────── */
-.tags-card {
-  padding-bottom: 10px;
-}
 
 .tags-list {
   display: flex;

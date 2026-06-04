@@ -263,7 +263,6 @@ export function JobWorkspace() {
               subtitle="State Farm · $1,500 ded. · CLM-582741"
               className="insurance-card flow-order-8"
               defaultOpen={false}
-              icon={<ShieldCheck size={16} />}
             >
               <InsuranceFields />
             </CollapsibleCard>
@@ -1003,34 +1002,42 @@ function ContactsCard({
   contacts: Contact[];
   openDrawer: () => void;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const total = contacts.length + 1;
 
   return (
-    <section className={`surface side-card contacts-card flow-order-7${open ? " card-open" : ""}`}>
-      <div className="panel-head" data-collapsed={!open ? "true" : undefined}>
-        <button type="button" className="collapsible-title-btn" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
-          <div className="panel-title-group">
-            <h2 className="section-title">Contacts</h2>
+    <section className={`surface side-card contacts-card collapsible flow-order-7${open ? " open" : ""}`}>
+      <button type="button" className="collapse-trigger" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <div className="collapse-heading-group">
+          <h2 className="section-title">
+            Contacts
             <span className="count-pill">{total}</span>
-          </div>
-        </button>
-        {open && (
-          <button className="text-link" type="button" onClick={openDrawer}>
-            <Plus size={14} aria-hidden="true" />
-            Add
-          </button>
-        )}
-        <ChevronDown size={15} className="collapse-chevron card-chevron-plain" aria-hidden="true" onClick={() => setOpen((v) => !v)} style={{ cursor: "pointer" }} />
-      </div>
-      {open && (
-        <div className="contacts-body">
-          <ContactBlock contact={primaryContact} />
-          {contacts.map((contact) => (
-            <ContactBlock key={`${contact.email}-${contact.phone}`} contact={contact} />
-          ))}
+          </h2>
+          {!open && (
+            <p className="collapse-subtitle">
+              {primaryContact.firstName} {primaryContact.lastName}
+              {contacts.length > 0 && ` · ${contacts[0].firstName} ${contacts[0].lastName}`}
+            </p>
+          )}
         </div>
-      )}
+        <ChevronDown size={18} className="collapse-chevron" aria-hidden="true" />
+      </button>
+      <div className="collapse-body">
+        {open && (
+          <>
+            <div className="card-action-right">
+              <button className="text-link" type="button" onClick={openDrawer}>
+                <Plus size={14} aria-hidden="true" />
+                Add another contact
+              </button>
+            </div>
+            <ContactBlock contact={primaryContact} />
+            {contacts.map((contact) => (
+              <ContactBlock key={`${contact.email}-${contact.phone}`} contact={contact} />
+            ))}
+          </>
+        )}
+      </div>
     </section>
   );
 }
@@ -1211,20 +1218,20 @@ function DescriptionCard() {
   const [value, setValue] = useState("");
 
   return (
-    <section className={`surface side-card description-card flow-order-10${open ? " card-open" : ""}`}>
-      <div className="panel-head" data-collapsed={!open ? "true" : undefined}>
-        <button type="button" className="collapsible-title-btn" onClick={() => { if (!editing) setOpen((v) => !v); }} aria-expanded={open}>
+    <section className={`surface side-card description-card collapsible flow-order-10${open ? " open" : ""}`}>
+      <button type="button" className="collapse-trigger" onClick={() => { if (!editing) setOpen((v) => !v); }} aria-expanded={open}>
+        <div className="collapse-heading-group">
           <h2 className="section-title">Description</h2>
-        </button>
-        {open && !editing && value && (
-          <button className="icon-button" type="button" onClick={() => setEditing(true)} aria-label="Edit description">
-            <Pencil size={14} />
-          </button>
-        )}
-        <ChevronDown size={15} className="collapse-chevron card-chevron-plain" aria-hidden="true" onClick={() => { if (!editing) setOpen((v) => !v); }} style={{ cursor: "pointer" }} />
-      </div>
-      {open && (
-        editing ? (
+          {!open && (
+            <p className="collapse-subtitle">
+              {value ? value.slice(0, 52) + (value.length > 52 ? "…" : "") : "No description"}
+            </p>
+          )}
+        </div>
+        <ChevronDown size={18} className="collapse-chevron" aria-hidden="true" />
+      </button>
+      <div className="collapse-body">
+        {open && (editing ? (
           <textarea
             className="description-textarea"
             value={value}
@@ -1240,8 +1247,8 @@ function DescriptionCard() {
               ? <span className="description-text">{value}</span>
               : <span className="text-secondary">Add a description…</span>}
           </button>
-        )
-      )}
+        ))}
+      </div>
     </section>
   );
 }
@@ -1265,54 +1272,57 @@ function TagsCard() {
   }
 
   return (
-    <section className={`surface side-card tags-card flow-order-11${open ? " card-open" : ""}`}>
-      <div className="panel-head" data-collapsed={!open ? "true" : undefined}>
-        <button type="button" className="collapsible-title-btn" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
-          <div className="panel-title-group">
-            <h2 className="section-title">
-              <Tag size={14} aria-hidden="true" />
-              Tags
-            </h2>
+    <section className={`surface side-card tags-card collapsible flow-order-11${open ? " open" : ""}`}>
+      <button type="button" className="collapse-trigger" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <div className="collapse-heading-group">
+          <h2 className="section-title">
+            Tags
             {tags.length > 0 && <span className="count-pill">{tags.length}</span>}
-          </div>
-        </button>
-        {open && (
-          <button className="text-link" type="button" onClick={() => { setOpen(true); setAdding(true); }}>
-            <Plus size={14} aria-hidden="true" />
-            Add tag
-          </button>
-        )}
-        <ChevronDown size={15} className="collapse-chevron card-chevron-plain" aria-hidden="true" onClick={() => setOpen((v) => !v)} style={{ cursor: "pointer" }} />
-      </div>
-      {open && (
-        <div className="tags-list">
-          {tags.map((tag) => (
-            <span key={tag} className="tag-pill">
-              {tag}
-              <button type="button" className="tag-remove" onClick={() => removeTag(tag)} aria-label={`Remove ${tag}`}>
-                <X size={10} />
-              </button>
-            </span>
-          ))}
-          {adding && (
-            <input
-              className="tag-input"
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") { e.preventDefault(); commitTag(); }
-                if (e.key === "Escape") { setAdding(false); setNewTag(""); }
-              }}
-              onBlur={commitTag}
-              autoFocus
-              placeholder="Tag name…"
-            />
-          )}
-          {!tags.length && !adding && (
-            <span className="text-secondary" style={{ fontSize: "12px" }}>None added</span>
+          </h2>
+          {!open && (
+            <p className="collapse-subtitle">
+              {tags.length > 0 ? tags.slice(0, 3).join(" · ") : "No tags"}
+            </p>
           )}
         </div>
-      )}
+        <ChevronDown size={18} className="collapse-chevron" aria-hidden="true" />
+      </button>
+      <div className="collapse-body">
+        {open && (
+          <>
+            <div className="tags-list">
+              {tags.map((tag) => (
+                <span key={tag} className="tag-pill">
+                  {tag}
+                  <button type="button" className="tag-remove" onClick={() => removeTag(tag)} aria-label={`Remove ${tag}`}>
+                    <X size={10} />
+                  </button>
+                </span>
+              ))}
+              {adding && (
+                <input
+                  className="tag-input"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") { e.preventDefault(); commitTag(); }
+                    if (e.key === "Escape") { setAdding(false); setNewTag(""); }
+                  }}
+                  onBlur={commitTag}
+                  autoFocus
+                  placeholder="Tag name…"
+                />
+              )}
+            </div>
+            <div className="card-action-right">
+              <button className="text-link" type="button" onClick={() => setAdding(true)}>
+                <Plus size={14} aria-hidden="true" />
+                Add tag
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </section>
   );
 }
