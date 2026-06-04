@@ -1400,36 +1400,91 @@ function MeasurementsView() {
           <h2 className="section-title">Roof Dimensions</h2>
           <button className="button ghost compact" type="button">Edit</button>
         </div>
-        <dl className="field-list measurements-fields">
-          <div><dt className="text-label">Total squares</dt><dd>28 SQ</dd></div>
-          <div><dt className="text-label">Pitch</dt><dd>6/12</dd></div>
-          <div><dt className="text-label">Layers</dt><dd>1</dd></div>
-          <div><dt className="text-label">Eave length</dt><dd>180 lf</dd></div>
-          <div><dt className="text-label">Ridge length</dt><dd>42 lf</dd></div>
-          <div><dt className="text-label">Hip / Valley</dt><dd>68 lf</dd></div>
-          <div><dt className="text-label">Drip edge</dt><dd>220 lf</dd></div>
-          <div><dt className="text-label">Waste factor</dt><dd>12%</dd></div>
-        </dl>
+        <div className="measurements-grid">
+          <div className="measurement-row">
+            <div className="measurement-col">
+              <span className="text-label">Total squares</span>
+              <strong className="measurement-value">28 SQ</strong>
+            </div>
+            <div className="measurement-col">
+              <span className="text-label">Pitch</span>
+              <strong className="measurement-value">6/12</strong>
+            </div>
+          </div>
+          <div className="measurement-row">
+            <div className="measurement-col">
+              <span className="text-label">Layers</span>
+              <strong className="measurement-value">1</strong>
+            </div>
+            <div className="measurement-col">
+              <span className="text-label">Eave length</span>
+              <strong className="measurement-value">180 lf</strong>
+            </div>
+          </div>
+          <div className="measurement-row">
+            <div className="measurement-col">
+              <span className="text-label">Ridge length</span>
+              <strong className="measurement-value">42 lf</strong>
+            </div>
+            <div className="measurement-col">
+              <span className="text-label">Hip / Valley</span>
+              <strong className="measurement-value">68 lf</strong>
+            </div>
+          </div>
+          <div className="measurement-row">
+            <div className="measurement-col">
+              <span className="text-label">Drip edge</span>
+              <strong className="measurement-value">220 lf</strong>
+            </div>
+            <div className="measurement-col">
+              <span className="text-label">Waste factor</span>
+              <strong className="measurement-value">12%</strong>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="surface measurements-card">
         <div className="panel-head">
           <h2 className="section-title">Material Estimates</h2>
         </div>
-        <dl className="field-list measurements-fields">
-          <div><dt className="text-label">Shingles needed</dt><dd>31.4 SQ (incl. waste)</dd></div>
-          <div><dt className="text-label">Underlayment</dt><dd>10 rolls</dd></div>
-          <div><dt className="text-label">Ice & water shield</dt><dd>2 rolls</dd></div>
-          <div><dt className="text-label">Ridge cap</dt><dd>4 bundles</dd></div>
-          <div><dt className="text-label">Drip edge</dt><dd>8 sticks</dd></div>
-        </dl>
+        <div className="measurements-grid">
+          <div className="measurement-row">
+            <div className="measurement-col">
+              <span className="text-label">Shingles needed</span>
+              <strong className="measurement-value">31.4 SQ</strong>
+              <span className="measurement-note">(incl. waste)</span>
+            </div>
+            <div className="measurement-col">
+              <span className="text-label">Underlayment</span>
+              <strong className="measurement-value">10 rolls</strong>
+            </div>
+          </div>
+          <div className="measurement-row">
+            <div className="measurement-col">
+              <span className="text-label">Ice & water shield</span>
+              <strong className="measurement-value">2 rolls</strong>
+            </div>
+            <div className="measurement-col">
+              <span className="text-label">Ridge cap</span>
+              <strong className="measurement-value">4 bundles</strong>
+            </div>
+          </div>
+          <div className="measurement-row">
+            <div className="measurement-col">
+              <span className="text-label">Drip edge</span>
+              <strong className="measurement-value">8 sticks</strong>
+            </div>
+            <div className="measurement-col" />
+          </div>
+        </div>
       </section>
 
       <section className="surface measurements-card">
         <div className="panel-head">
           <h2 className="section-title">Notes</h2>
         </div>
-        <p className="text-secondary" style={{ fontSize: "13px", lineHeight: "1.6" }}>
+        <p className="measurements-notes">
           Slope confirmed during inspection — no structural damage found. Two skylights on north face require additional flashing. Gutters to be re-hung after installation.
         </p>
       </section>

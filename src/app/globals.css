@@ -136,6 +136,9 @@ p {
 }
 
 .icon-rail {
+  position: sticky;
+  top: 0;
+  height: 100vh;
   display: flex;
   width: 56px;
   flex-direction: column;
@@ -2865,16 +2868,53 @@ textarea,
   padding: var(--space-card);
 }
 
-.measurements-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 24px;
-}
-
-.measurements-fields div {
+.measurements-grid {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 16px;
+}
+
+.measurement-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 14px 14px;
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.measurement-col {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.measurement-col:empty {
+  display: none;
+}
+
+.measurement-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.measurement-note {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.measurements-notes {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+  padding: 12px 14px;
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
 }
 
 /* ── Invoices view ──────────────────────────────────────────────── */
