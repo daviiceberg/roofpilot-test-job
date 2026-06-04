@@ -56,7 +56,7 @@ import {
 } from "lucide-react";
 import { FormEvent, useMemo, useState, type ReactNode } from "react";
 
-type ContentTab = "overview" | "activity" | "documents" | "proposals" | "production";
+type ContentTab = "overview" | "activity" | "measurements" | "proposals" | "documents" | "invoices" | "production";
 
 export function JobWorkspace() {
   const [selectedMode, setSelectedMode] = useState<ComposerMode>("note");
@@ -71,6 +71,7 @@ export function JobWorkspace() {
   const [contacts, setContacts] = useState<Contact[]>([defaultSecondaryContact]);
   const [materialOrders, setMaterialOrders] = useState<MaterialOrder[]>(initialMaterialOrders);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>(initialWorkOrders);
+  const [jobLabels] = useState<string[]>(["Supplement Required", "Garage"]);
   const [activeTab, setActiveTab] = useState<ContentTab>("overview");
   const [tasks, setTasks] = useState<TaskItem[]>([
     { id: 1, title: "Review estimate with Hannah", priority: "high", dueDate: "Jun 5, 2026", tags: ["Estimate", "Homeowner"] },
@@ -184,7 +185,7 @@ export function JobWorkspace() {
           </div>
         ) : null}
 
-        <JobHero onCreateProposal={() => showToast("✓ Proposal draft started")} />
+        <JobHero onCreateProposal={() => showToast("✓ Proposal draft started")} labels={jobLabels} />
 
         <ContentTabBar
           activeTab={activeTab}
@@ -222,10 +223,12 @@ export function JobWorkspace() {
                 onFilterChange={setTimelineFilter}
               />
             )}
+            {activeTab === "measurements" && <MeasurementsView />}
             {activeTab === "documents" && <DocumentsView />}
             {activeTab === "proposals" && (
               <ProposalsView onCreateProposal={() => showToast("✓ Proposal draft started")} />
             )}
+            {activeTab === "invoices" && <InvoicesView />}
             {activeTab === "production" && (
               <ProductionView
                 materialOrders={materialOrders}
@@ -354,7 +357,7 @@ function FinancialSummary({ onCreateProposal }: { onCreateProposal: () => void }
 }
 
 /* ── Job Hero (compact unified card with embedded pipeline) ──────── */
-function JobHero({ onCreateProposal }: { onCreateProposal: () => void }) {
+function JobHero({ onCreateProposal, labels = [] }: { onCreateProposal: () => void; labels?: string[] }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const photoSrc = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=90";
 
@@ -402,6 +405,9 @@ function JobHero({ onCreateProposal }: { onCreateProposal: () => void }) {
                 <span className="engagement-dot" />
                 Warm lead
               </span>
+              {labels.map((label) => (
+                <span key={label} className="job-label-chip">{label}</span>
+              ))}
             </div>
           </div>
         </div>
@@ -490,11 +496,13 @@ function ContentTabBar({
   productionCount: number;
 }) {
   const tabs: { id: ContentTab; label: string; count?: number }[] = [
-    { id: "overview", label: "Overview" },
-    { id: "activity", label: "Activity", count: activityCount },
-    { id: "documents", label: "Documents", count: documentCount },
-    { id: "proposals", label: "Proposals", count: proposalCount },
-    { id: "production", label: "Production", count: productionCount }
+    { id: "overview",     label: "Overview" },
+    { id: "activity",     label: "Activity",     count: activityCount },
+    { id: "measurements", label: "Measurements" },
+    { id: "proposals",    label: "Proposals",    count: proposalCount },
+    { id: "documents",    label: "Documents",    count: documentCount },
+    { id: "invoices",     label: "Invoices" },
+    { id: "production",   label: "Production",   count: productionCount }
   ];
 
   return (
@@ -945,6 +953,11 @@ function AiRecommendations({ onAction }: { onAction: (action: AiAction) => void 
         </h2>
       </div>
 
+      {/* Narrative summary */}
+      <p className="ai-summary">
+        Engagement is <strong>warm</strong> with clear buying signals. Hannah has opened the estimate email 3× and replied within the hour. Momentum is strong — sending the proposal now significantly increases close probability.
+      </p>
+
       {/* Recommended next step — title + body left, CTA right */}
       <div className="ai-primary">
         <div className="ai-primary-left">
@@ -1161,6 +1174,10 @@ function JobDetailsFields() {
   return (
     <dl className="field-list metadata-fields">
       <div>
+        <dt className="text-label">Close date</dt>
+        <dd>Jun 20, 2026</dd>
+      </div>
+      <div>
         <dt className="text-label">Stage</dt>
         <dd>Estimate — In Review</dd>
       </div>
@@ -1371,6 +1388,92 @@ function CollapsibleCard({
       </button>
       <div className="collapse-body">{open ? children : null}</div>
     </section>
+  );
+}
+
+/* ── Measurements View ─────────────────────────────────────────── */
+function MeasurementsView() {
+  return (
+    <div className="measurements-view">
+      <section className="surface measurements-card">
+        <div className="panel-head">
+          <h2 className="section-title">Roof Dimensions</h2>
+          <button className="button ghost compact" type="button">Edit</button>
+        </div>
+        <dl className="field-list measurements-fields">
+          <div><dt className="text-label">Total squares</dt><dd>28 SQ</dd></div>
+          <div><dt className="text-label">Pitch</dt><dd>6/12</dd></div>
+          <div><dt className="text-label">Layers</dt><dd>1</dd></div>
+          <div><dt className="text-label">Eave length</dt><dd>180 lf</dd></div>
+          <div><dt className="text-label">Ridge length</dt><dd>42 lf</dd></div>
+          <div><dt className="text-label">Hip / Valley</dt><dd>68 lf</dd></div>
+          <div><dt className="text-label">Drip edge</dt><dd>220 lf</dd></div>
+          <div><dt className="text-label">Waste factor</dt><dd>12%</dd></div>
+        </dl>
+      </section>
+
+      <section className="surface measurements-card">
+        <div className="panel-head">
+          <h2 className="section-title">Material Estimates</h2>
+        </div>
+        <dl className="field-list measurements-fields">
+          <div><dt className="text-label">Shingles needed</dt><dd>31.4 SQ (incl. waste)</dd></div>
+          <div><dt className="text-label">Underlayment</dt><dd>10 rolls</dd></div>
+          <div><dt className="text-label">Ice & water shield</dt><dd>2 rolls</dd></div>
+          <div><dt className="text-label">Ridge cap</dt><dd>4 bundles</dd></div>
+          <div><dt className="text-label">Drip edge</dt><dd>8 sticks</dd></div>
+        </dl>
+      </section>
+
+      <section className="surface measurements-card">
+        <div className="panel-head">
+          <h2 className="section-title">Notes</h2>
+        </div>
+        <p className="text-secondary" style={{ fontSize: "13px", lineHeight: "1.6" }}>
+          Slope confirmed during inspection — no structural damage found. Two skylights on north face require additional flashing. Gutters to be re-hung after installation.
+        </p>
+      </section>
+    </div>
+  );
+}
+
+/* ── Invoices View ──────────────────────────────────────────────── */
+function InvoicesView() {
+  return (
+    <div className="invoices-view">
+      <section className="surface invoices-card">
+        <div className="panel-head">
+          <h2 className="section-title">Invoices</h2>
+          <button className="button ghost compact" type="button">
+            <Plus size={14} aria-hidden="true" />
+            Create Invoice
+          </button>
+        </div>
+
+        <div className="invoices-summary">
+          <div className="inv-summary-row">
+            <span className="text-secondary">Job value</span>
+            <strong>$18,450</strong>
+          </div>
+          <div className="inv-summary-row">
+            <span className="text-secondary">Total invoiced</span>
+            <strong>$0</strong>
+          </div>
+          <div className="inv-summary-row">
+            <span className="text-secondary">Balance due</span>
+            <strong className="inv-balance-due">$18,450</strong>
+          </div>
+        </div>
+
+        <div className="invoices-empty">
+          <p className="text-secondary">No invoices yet. Invoices are typically created after the proposal is signed and work is scheduled.</p>
+          <button className="button primary compact" type="button">
+            <Plus size={14} aria-hidden="true" />
+            Create first invoice
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }
 
