@@ -1,0 +1,1383 @@
+"use client";
+
+import { AppShell } from "@/components/app-shell";
+import {
+  actionConfig,
+  aiRecommendations,
+  defaultSecondaryContact,
+  emailTemplates,
+  initialTimeline,
+  matchesTimelineFilter,
+  messageTemplates,
+  nowLabel,
+  primaryContact,
+  timelineMeta,
+  workflowStages,
+  type ComposerMode,
+  type Contact,
+  type TaskItem,
+  type AiAction,
+  type TimelineFilter,
+  type TimelineItem
+} from "@/lib/job-data";
+import {
+  AlertTriangle,
+  Check,
+  ChevronDown,
+  CircleDollarSign,
+  FileCheck2,
+  FileText,
+  FilePlus2,
+  Flame,
+  Image,
+  Loader2,
+  Mail,
+  MessageSquare,
+  PackageCheck,
+  Paperclip,
+  Phone,
+  Plus,
+  RefreshCw,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  UserPlus,
+  X,
+  Zap
+} from "lucide-react";
+import { FormEvent, useMemo, useState, type ReactNode } from "react";
+
+type ContentTab = "overview" | "activity" | "documents" | "proposals";
+
+export function JobWorkspace() {
+  const [selectedMode, setSelectedMode] = useState<ComposerMode>("note");
+  const [timeline, setTimeline] = useState<TimelineItem[]>(initialTimeline);
+  const [timelineFilter, setTimelineFilter] = useState<TimelineFilter>("all");
+  const [toast, setToast] = useState("");
+  const [errorBanner, setErrorBanner] = useState("");
+  const [inlineSuccess, setInlineSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isTaskDrawerOpen, setIsTaskDrawerOpen] = useState(false);
+  const [contacts, setContacts] = useState<Contact[]>([defaultSecondaryContact]);
+  const [activeTab, setActiveTab] = useState<ContentTab>("overview");
+  const [tasks, setTasks] = useState<TaskItem[]>([
+    { id: 1, title: "Review estimate with Hannah" },
+    { id: 2, title: "Confirm material selections" },
+    { id: 3, title: "Send proposal once approved" }
+  ]);
+
+  const selected = actionConfig[selectedMode] as {
+    label: string;
+    cta: string;
+    success: string;
+    timelineTitle: string;
+  };
+
+  const filteredTimeline = useMemo(
+    () => timeline.filter((item) => matchesTimelineFilter(item, timelineFilter)),
+    [timeline, timelineFilter]
+  );
+
+  function showToast(message: string) {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 3000);
+  }
+
+  function submitComposer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    setIsSubmitting(true);
+    setInlineSuccess("");
+    setErrorBanner("");
+
+    window.setTimeout(() => {
+      const title =
+        String(formData.get("title") || formData.get("subject") || selected.timelineTitle) ||
+        selected.timelineTitle;
+      const detail =
+        String(formData.get("description") || formData.get("message") || "Added from workspace.") ||
+        "Added from workspace.";
+
+      setTimeline((items) => [
+        {
+          id: Date.now(),
+          type: selectedMode,
+          title: selected.timelineTitle,
+          detail: title === selected.timelineTitle ? detail : `${title}: ${detail}`,
+          time: nowLabel()
+        },
+        ...items
+      ]);
+      const toastMap: Record<ComposerMode, string> = {
+        note: "✓ Note Saved",
+        task: "✓ Task Created",
+        email: "✓ Email Sent",
+        message: "✓ Message Sent"
+      };
+      setInlineSuccess(selected.success);
+      showToast(toastMap[selectedMode]);
+      setIsSubmitting(false);
+      form.reset();
+    }, 700);
+  }
+
+  function completeTask(taskId: number, taskTitle: string) {
+    setTasks((items) => items.filter((task) => task.id !== taskId));
+    setTimeline((items) => [
+      {
+        id: Date.now(),
+        type: "task",
+        title: "Task Completed",
+        detail: taskTitle,
+        time: nowLabel()
+      },
+      ...items
+    ]);
+    showToast("Task completed");
+  }
+
+  function addContact(contact: Contact) {
+    const exists = contacts.some(
+      (c) => c.email === contact.email && c.firstName === contact.firstName && c.lastName === contact.lastName
+    );
+    if (!exists) {
+      setContacts((items) => [...items, contact]);
+    }
+    setIsDrawerOpen(false);
+    showToast("✓ Contact Added");
+    setTimeline((items) => [
+      {
+        id: Date.now(),
+        type: "contact",
+        title: "Contact Added",
+        detail: `${contact.firstName} ${contact.lastName}, ${contact.relationship}`,
+        time: nowLabel()
+      },
+      ...items
+    ]);
+  }
+
+  return (
+    <AppShell>
+      <main className="workspace">
+        {errorBanner ? (
+          <div className="error-banner" role="alert">
+            <AlertTriangle size={18} aria-hidden="true" />
+            <span>{errorBanner}</span>
+            <button type="button" className="button ghost compact" onClick={() => setErrorBanner("")}>
+              <RefreshCw size={15} />
+              Retry
+            </button>
+          </div>
+        ) : null}
+
+        <JobHero onCreateProposal={() => showToast("✓ Proposal draft started")} />
+
+        <ContentTabBar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          activityCount={timeline.length}
+          documentCount={5}
+          proposalCount={2}
+        />
+
+        <section className="layout-shell">
+          {/* Left rail — content switches per tab */}
+          <div className="left-rail">
+            {activeTab === "overview" && (
+              <>
+                <ActivityComposer
+                  selectedMode={selectedMode}
+                  setSelectedMode={setSelectedMode}
+                  submitComposer={submitComposer}
+                  isSubmitting={isSubmitting}
+                  inlineSuccess={inlineSuccess}
+                />
+                <ActivityTimeline
+                  timeline={filteredTimeline}
+                  filter={timelineFilter}
+                  onFilterChange={setTimelineFilter}
+                />
+              </>
+            )}
+            {activeTab === "activity" && (
+              <ActivityTimeline
+                timeline={filteredTimeline}
+                filter={timelineFilter}
+                onFilterChange={setTimelineFilter}
+              />
+            )}
+            {activeTab === "documents" && <DocumentsView />}
+            {activeTab === "proposals" && (
+              <ProposalsView onCreateProposal={() => showToast("✓ Proposal draft started")} />
+            )}
+          </div>
+
+          {/* Right rail — always visible regardless of active tab */}
+          <aside className="right-rail">
+            <AiRecommendations
+              onAction={(action) => {
+                if (action === "proposal") showToast("✓ Proposal draft started");
+                if (action === "message") setSelectedMode("message");
+                if (action === "notes") setSelectedMode("note");
+                if (action === "message" || action === "notes") {
+                  setActiveTab("overview");
+                  window.setTimeout(() => {
+                    document.querySelector(".composer-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }, 50);
+                }
+              }}
+            />
+            <TasksCard tasks={tasks} completeTask={completeTask} openTaskDrawer={() => setIsTaskDrawerOpen(true)} />
+            <ContactsCard contacts={contacts} openDrawer={() => setIsDrawerOpen(true)} />
+            <CollapsibleCard
+              title="Insurance"
+              subtitle="State Farm · $1,500 ded. · CLM-582741"
+              className="insurance-card flow-order-8"
+              defaultOpen={false}
+              icon={<ShieldCheck size={16} />}
+            >
+              <InsuranceFields />
+            </CollapsibleCard>
+            <CollapsibleCard
+              title="Job Details"
+              subtitle="Arch. Shingle · Hail damage · 2,400 sq ft"
+              className="job-details-card metadata-card flow-order-9"
+              defaultOpen={false}
+            >
+              <JobDetailsFields />
+            </CollapsibleCard>
+          </aside>
+        </section>
+
+        <MobileChrome selectedMode={selectedMode} setSelectedMode={setSelectedMode} />
+
+        {toast ? (
+          <div className="toast toast-top" role="status">
+            <Check size={16} aria-hidden="true" />
+            {toast}
+          </div>
+        ) : null}
+
+        {isDrawerOpen ? (
+          <ContactDrawer onClose={() => setIsDrawerOpen(false)} onSave={addContact} />
+        ) : null}
+        {isTaskDrawerOpen ? (
+          <AddTaskDrawer
+            onClose={() => setIsTaskDrawerOpen(false)}
+            onSave={(title) => {
+              setTasks((prev) => [...prev, { id: Date.now(), title }]);
+              setIsTaskDrawerOpen(false);
+              showToast("✓ Task added");
+            }}
+          />
+        ) : null}
+      </main>
+    </AppShell>
+  );
+}
+
+/* ── Job Hero (compact unified card with embedded pipeline) ──────── */
+function JobHero({ onCreateProposal }: { onCreateProposal: () => void }) {
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const photoSrc = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=90";
+
+  return (
+    <header className="job-hero surface">
+      {lightboxOpen && (
+        <div
+          className="lightbox-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Property photo"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <img
+            src={photoSrc}
+            alt="Weiss property exterior"
+            className="lightbox-img"
+          />
+        </div>
+      )}
+
+      {/* Top row: identity | metrics | actions */}
+      <div className="job-hero-row">
+        <div className="job-hero-main">
+          <button
+            type="button"
+            className="property-photo-btn"
+            onClick={() => setLightboxOpen(true)}
+            aria-label="View property photo"
+          >
+            <img
+              className="property-photo"
+              src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=320&q=80"
+              alt="Weiss property exterior"
+            />
+          </button>
+          <div className="job-hero-copy">
+            <h1 className="page-title">Hannah Weiss</h1>
+            <p className="text-secondary hero-address">
+              450 Merci Blvd · Dripping Springs, TX 78620
+            </p>
+            <div className="hero-badges">
+              <span className="stage-chip">Appointment Scheduled</span>
+              <span className="engagement-badge warm">
+                <span className="engagement-dot" />
+                Warm lead
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="job-hero-metrics">
+          <div className="hero-metric">
+            <span className="text-label">Close probability</span>
+            <strong className="hero-stat">84%</strong>
+          </div>
+          <div className="hero-metric highlight">
+            <span className="text-label">Potential revenue</span>
+            <strong className="hero-stat">$18,450</strong>
+          </div>
+          <div className="hero-metric">
+            <span className="text-label">Assigned rep</span>
+            <strong className="hero-rep">Dana Kim</strong>
+          </div>
+        </div>
+
+        <div className="header-actions" aria-label="Primary job actions">
+          <button type="button" className="button primary" onClick={onCreateProposal}>
+            <FileCheck2 size={16} aria-hidden="true" />
+            Create Proposal
+          </button>
+          <button type="button" className="button secondary">
+            <FilePlus2 size={15} aria-hidden="true" />
+            Estimate
+          </button>
+          <button type="button" className="button secondary">
+            <CircleDollarSign size={15} aria-hidden="true" />
+            Invoice
+          </button>
+          <button type="button" className="icon-button" aria-label="Material order" title="Material Order">
+            <PackageCheck size={17} />
+          </button>
+        </div>
+      </div>
+
+      {/* Pipeline strip — bottom of hero card */}
+      <div className="hero-pipeline" role="region" aria-label="Job stage progress">
+        <ol className="stage-list">
+          {workflowStages.map((stage, i) => {
+            const next = workflowStages[i + 1];
+            let lineStatus = "upcoming";
+            if (stage.status === "done") {
+              lineStatus = next?.status === "done" ? "done" : "partial";
+            }
+            return (
+              <li
+                key={stage.id}
+                className={`stage-step stage-${stage.status}`}
+                data-line={lineStatus}
+                aria-current={stage.status === "current" ? "step" : undefined}
+              >
+                <div className="step-dot" aria-hidden="true">
+                  {stage.status === "done" && <Check size={9} strokeWidth={3} />}
+                </div>
+                <div className="step-label">
+                  <span className="step-name">{stage.label}</span>
+                  {stage.dateLabel && <time className="step-date">{stage.dateLabel}</time>}
+                  {stage.statusLabel && <span className="step-badge">{stage.statusLabel}</span>}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </header>
+  );
+}
+
+/* ── Content Tab Bar ───────────────────────────────────────────── */
+function ContentTabBar({
+  activeTab,
+  setActiveTab,
+  activityCount,
+  documentCount,
+  proposalCount
+}: {
+  activeTab: ContentTab;
+  setActiveTab: (tab: ContentTab) => void;
+  activityCount: number;
+  documentCount: number;
+  proposalCount: number;
+}) {
+  const tabs: { id: ContentTab; label: string; count?: number }[] = [
+    { id: "overview", label: "Overview" },
+    { id: "activity", label: "Activity", count: activityCount },
+    { id: "documents", label: "Documents", count: documentCount },
+    { id: "proposals", label: "Proposals", count: proposalCount }
+  ];
+
+  return (
+    <div className="content-tabbar" role="tablist" aria-label="Job sections">
+      <div className="content-tabbar-inner">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            className={activeTab === tab.id ? "ctab ctab-active" : "ctab"}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+            {tab.count !== undefined && (
+              <span className="ctab-count">{tab.count}</span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Documents View ────────────────────────────────────────────── */
+type DocItem = {
+  id: number;
+  icon: "pdf" | "img" | "xls" | "misc";
+  name: string;
+  size: string;
+  date: string;
+  status: "signed" | "pending" | "draft";
+  statusLabel: string;
+};
+
+const mockDocuments: DocItem[] = [
+  { id: 1, icon: "pdf", name: "Inspection Report.pdf", size: "1.2 MB", date: "Jun 2, 2026", status: "signed", statusLabel: "Completed" },
+  { id: 2, icon: "pdf", name: "Insurance Claim Form.pdf", size: "840 KB", date: "May 28, 2026", status: "pending", statusLabel: "Awaiting signature" },
+  { id: 3, icon: "img", name: "Site Photos — Hail Damage.zip", size: "22 MB", date: "Jun 2, 2026", status: "signed", statusLabel: "Uploaded" },
+  { id: 4, icon: "pdf", name: "Material Estimate Draft.pdf", size: "490 KB", date: "Jun 3, 2026", status: "draft", statusLabel: "Draft" },
+  { id: 5, icon: "xls", name: "Adjuster Scope of Work.xlsx", size: "310 KB", date: "Jun 1, 2026", status: "pending", statusLabel: "In review" }
+];
+
+function DocumentsView() {
+  return (
+    <div className="tab-content-inner">
+      <div className="tab-section-head">
+        <h2 className="section-title">Documents</h2>
+        <button type="button" className="button ghost compact">
+          <Plus size={14} />
+          Upload Document
+        </button>
+      </div>
+      <div className="doc-grid">
+        {mockDocuments.map((doc) => (
+          <button key={doc.id} type="button" className="doc-card" aria-label={`Open ${doc.name}`}>
+            <div className={`doc-icon ${doc.icon}`}>
+              {doc.icon === "pdf" && <FileText size={20} />}
+              {doc.icon === "img" && <Image size={20} />}
+              {doc.icon === "xls" && <FileText size={20} />}
+              {doc.icon === "misc" && <FileText size={20} />}
+            </div>
+            <div className="doc-meta">
+              <span className="doc-name">{doc.name}</span>
+              <span className="doc-info">{doc.size} · {doc.date}</span>
+            </div>
+            <div className={`doc-status ${doc.status}`}>
+              {doc.status === "signed" && <Check size={12} />}
+              {doc.statusLabel}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Proposals View ────────────────────────────────────────────── */
+function ProposalsView({ onCreateProposal }: { onCreateProposal: () => void }) {
+  return (
+    <div className="tab-content-inner">
+      <div className="tab-section-head">
+        <h2 className="section-title">Proposals</h2>
+        <button type="button" className="button primary compact" onClick={onCreateProposal}>
+          <FileCheck2 size={14} />
+          New Proposal
+        </button>
+      </div>
+      <div className="proposals-list">
+        <div className="proposal-card proposal-primary">
+          <div>
+            <p className="proposal-title">Full Roof Replacement Package</p>
+            <p className="proposal-amount">$18,450</p>
+            <div className="proposal-meta-row">
+              <div className="proposal-meta-item">
+                <span className="text-label">Sent</span>
+                <span style={{ fontSize: 13, fontWeight: 500 }}>Jun 3, 2026</span>
+              </div>
+              <div className="proposal-meta-item">
+                <span className="text-label">Valid until</span>
+                <span style={{ fontSize: 13, fontWeight: 500 }}>Jul 3, 2026</span>
+              </div>
+              <div className="proposal-meta-item">
+                <span className="text-label">Prepared by</span>
+                <span style={{ fontSize: 13, fontWeight: 500 }}>Dana Kim</span>
+              </div>
+            </div>
+            <div className="proposal-line-items">
+              <div className="line-item-row">
+                <span className="item-label">Architectural shingle — full replace</span>
+                <span className="item-value">$11,200</span>
+              </div>
+              <div className="line-item-row">
+                <span className="item-label">Labor & installation</span>
+                <span className="item-value">$4,800</span>
+              </div>
+              <div className="line-item-row">
+                <span className="item-label">Gutters & fascia repair</span>
+                <span className="item-value">$1,650</span>
+              </div>
+              <div className="line-item-row">
+                <span className="item-label">Permit & disposal</span>
+                <span className="item-value">$800</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <span className="proposal-status-badge sent">Sent · Under Review</span>
+          </div>
+        </div>
+
+        <div className="proposal-card">
+          <div>
+            <p className="proposal-title">Partial Repair Estimate</p>
+            <p className="proposal-amount">$4,250</p>
+            <div className="proposal-meta-row">
+              <div className="proposal-meta-item">
+                <span className="text-label">Created</span>
+                <span style={{ fontSize: 13, fontWeight: 500 }}>Jun 1, 2026</span>
+              </div>
+              <div className="proposal-meta-item">
+                <span className="text-label">Scope</span>
+                <span style={{ fontSize: 13, fontWeight: 500 }}>Northwest section only</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <span className="proposal-status-badge draft">Draft</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Recommended Next Step (guidance only — no CTA) ────────────── */
+function RecommendedNextStep() {
+  return (
+    <div className="next-step-strip surface">
+      <span className="next-step-label">
+        <Zap size={13} aria-hidden="true" />
+        Recommended next step
+      </span>
+      <p className="next-step-message">
+        Inspection completed Jun 2 · Proposal package is ready to send · 84% close probability.
+      </p>
+    </div>
+  );
+}
+
+/* ── Activity Composer ─────────────────────────────────────────── */
+function ActivityComposer({
+  selectedMode,
+  setSelectedMode,
+  submitComposer,
+  isSubmitting,
+  inlineSuccess
+}: {
+  selectedMode: ComposerMode;
+  setSelectedMode: (mode: ComposerMode) => void;
+  submitComposer: (event: FormEvent<HTMLFormElement>) => void;
+  isSubmitting: boolean;
+  inlineSuccess: string;
+}) {
+  const selected = actionConfig[selectedMode] as { label: string; cta: string };
+  const [emailTemplate, setEmailTemplate] = useState("Proposal Follow-up");
+  const [messageTemplate, setMessageTemplate] = useState("Proposal Sent");
+  const [composerKey, setComposerKey] = useState(0);
+
+  const emailDefaults = emailTemplates[emailTemplate];
+  const messageDefault = messageTemplates[messageTemplate];
+
+  function applyTemplate(name: string) {
+    if (selectedMode === "email") {
+      setEmailTemplate(name);
+      setComposerKey((k) => k + 1);
+    } else if (selectedMode === "message") {
+      setMessageTemplate(name);
+      setComposerKey((k) => k + 1);
+    }
+  }
+
+  return (
+    <section className="surface composer-panel flow-order-4">
+      <div className="panel-head">
+        <div>
+          <h2 className="section-title">Log Activity</h2>
+          <p className="composer-prompt text-secondary">What would you like to add to this job?</p>
+        </div>
+      </div>
+      <div className="segmented" role="tablist" aria-label="Activity type">
+        {(Object.keys(actionConfig) as ComposerMode[]).map((mode) => {
+          const item = actionConfig[mode] as { label: string; icon: typeof FileCheck2 };
+          const Icon = item.icon;
+          return (
+            <button
+              key={mode}
+              className={mode === selectedMode ? "segment active" : "segment"}
+              onClick={() => setSelectedMode(mode)}
+              type="button"
+              role="tab"
+              aria-selected={mode === selectedMode}
+            >
+              <Icon size={16} aria-hidden="true" />
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="composer-body composer-fade" key={`${selectedMode}-${composerKey}`}>
+        {(selectedMode === "email" || selectedMode === "message") && (
+          <div className="template-chips" role="group" aria-label="Smart templates">
+            {selectedMode === "email"
+              ? Object.keys(emailTemplates).map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    className={emailTemplate === name ? "chip active" : "chip"}
+                    onClick={() => applyTemplate(name)}
+                  >
+                    {name}
+                  </button>
+                ))
+              : Object.keys(messageTemplates).map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    className={messageTemplate === name ? "chip active" : "chip"}
+                    onClick={() => applyTemplate(name)}
+                  >
+                    {name}
+                  </button>
+                ))}
+          </div>
+        )}
+
+        <form className="composer-form" onSubmit={submitComposer}>
+          {selectedMode === "email" ? (
+            <>
+              <label>
+                <span className="text-label">To</span>
+                <input name="to" defaultValue="hannah.weiss@example.com" />
+              </label>
+              <label>
+                <span className="text-label">Subject</span>
+                <input name="subject" defaultValue={emailDefaults.subject} />
+              </label>
+              <label>
+                <span className="text-label">Message</span>
+                <textarea name="message" className="composer-textarea" defaultValue={emailDefaults.message} />
+              </label>
+            </>
+          ) : selectedMode === "message" ? (
+            <>
+              <label>
+                <span className="text-label">To</span>
+                <input name="to" defaultValue="+1 (512) 555-0148" />
+              </label>
+              <label>
+                <span className="text-label">Message</span>
+                <textarea name="message" className="composer-textarea" defaultValue={messageDefault} />
+              </label>
+            </>
+          ) : (
+            <>
+              <label>
+                <span className="text-label">{selectedMode === "task" ? "Task" : "Note"}</span>
+                <input
+                  name="title"
+                  placeholder={selectedMode === "task" ? "What needs to happen?" : "Quick headline"}
+                  defaultValue={selectedMode === "task" ? "Follow up proposal" : "Homeowner update"}
+                />
+              </label>
+              <label>
+                <span className="text-label">Details</span>
+                <textarea
+                  name="description"
+                  className="composer-textarea"
+                  placeholder="Add context your team should see…"
+                  defaultValue={
+                    selectedMode === "task"
+                      ? "Call homeowner after proposal is sent."
+                      : "Homeowner asked about deductible timing and production schedule."
+                  }
+                />
+              </label>
+            </>
+          )}
+
+          <div className="composer-actions">
+            <button className="button ghost" type="button">
+              <Paperclip size={16} aria-hidden="true" />
+              Attach
+            </button>
+            <button className="button primary" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="spin" size={16} aria-hidden="true" /> : <Send size={16} aria-hidden="true" />}
+              {isSubmitting ? "Sending…" : selected.cta}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {inlineSuccess ? (
+        <div className="inline-success" role="status">
+          <Check size={16} aria-hidden="true" />
+          {inlineSuccess}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+/* ── Activity Timeline ─────────────────────────────────────────── */
+const timelineFilters: { id: TimelineFilter; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "notes", label: "Notes" },
+  { id: "tasks", label: "Tasks" },
+  { id: "communication", label: "Communication" },
+  { id: "system", label: "System" }
+];
+
+function ActivityTimeline({
+  timeline,
+  filter,
+  onFilterChange
+}: {
+  timeline: TimelineItem[];
+  filter: TimelineFilter;
+  onFilterChange: (f: TimelineFilter) => void;
+}) {
+  return (
+    <section className="surface timeline-panel flow-order-5">
+      <div className="panel-head">
+        <div>
+          <h2 className="section-title">Activity timeline</h2>
+          <p className="text-meta">Chronological record of everything on this job</p>
+        </div>
+      </div>
+
+      <div className="filter-row" role="tablist" aria-label="Filter timeline">
+        {timelineFilters.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            role="tab"
+            className={filter === f.id ? "filter-chip active" : "filter-chip"}
+            aria-selected={filter === f.id}
+            onClick={() => onFilterChange(f.id)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="timeline-list">
+        {timeline.length ? (
+          timeline.map((item) => {
+            const meta = timelineMeta[item.type] ?? timelineMeta.system;
+            const Icon = meta.icon;
+            return (
+              <article className={`timeline-card ${meta.colorClass}`} key={item.id}>
+                <div className={`timeline-icon ${meta.colorClass}`}>
+                  <Icon size={15} aria-hidden="true" />
+                </div>
+                <div className="timeline-content">
+                  <div className="timeline-top">
+                    <h3>{item.title}</h3>
+                    <time className="text-meta">{item.time}</time>
+                  </div>
+                  <p className="text-secondary">{item.detail}</p>
+                </div>
+              </article>
+            );
+          })
+        ) : (
+          <p className="empty-text text-secondary">No activities match this filter.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ── Progress Card ─────────────────────────────────────────────── */
+function ProgressCard() {
+  return (
+    <section className="surface side-card progress-card flow-order-10">
+      <h2 className="section-title">Job progress</h2>
+      <ol className="workflow-list">
+        {workflowStages.map((stage) => (
+          <li key={stage.id} className={`workflow-row ${stage.status}`}>
+            <span className="workflow-marker" aria-hidden="true">
+              {stage.status === "done" ? <Check size={12} /> : stage.status === "current" ? "◉" : "○"}
+            </span>
+            <div className="workflow-copy">
+              <div className="workflow-title-row">
+                <strong>{stage.label}</strong>
+                {stage.dateLabel ? <span className="text-meta">{stage.dateLabel}</span> : null}
+                {stage.statusLabel ? <span className="status-tag">{stage.statusLabel}</span> : null}
+              </div>
+              {stage.owner ? <span className="text-meta">Owner · {stage.owner}</span> : null}
+              {stage.notes ? <span className="text-secondary workflow-summary">{stage.notes}</span> : null}
+            </div>
+            {stage.notes || stage.owner ? (
+              <div className="workflow-tooltip" role="tooltip">
+                <span className="text-label">Completion details</span>
+                <span className="text-meta">{stage.dateLabel ?? stage.statusLabel ?? "Pending"}</span>
+                <span>{stage.owner ?? "Unassigned"}</span>
+                <p>{stage.notes ?? "No additional notes."}</p>
+              </div>
+            ) : null}
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+/* ── AI Insight ─────────────────────────────────────────────────── */
+function AiRecommendations({ onAction }: { onAction: (action: AiAction) => void }) {
+  return (
+    <section className="surface side-card ai-card flow-order-3">
+      <div className="panel-head">
+        <h2 className="section-title">
+          <Sparkles size={16} aria-hidden="true" />
+          AI Insight
+        </h2>
+      </div>
+
+      {/* Recommended next step — title + body left, CTA right */}
+      <div className="ai-primary">
+        <div className="ai-primary-left">
+          <span className="ai-primary-eyebrow">
+            <Zap size={12} aria-hidden="true" />
+            Recommended next step
+          </span>
+          <strong className="ai-primary-title">Proposal is ready to send.</strong>
+          <p className="text-secondary ai-primary-body">Email opened 3× · high intent.</p>
+        </div>
+        <button
+          type="button"
+          className="button primary compact ai-primary-cta"
+          onClick={() => onAction("proposal")}
+        >
+          <FileCheck2 size={14} aria-hidden="true" />
+          Create Proposal
+        </button>
+      </div>
+
+      {/* Contextual data — integrated below */}
+      <div className="ai-insight">
+        <div className="ai-insight-row">
+          <span className="text-secondary">Best follow-up window</span>
+          <strong className="ai-insight-value">2 PM – 5 PM</strong>
+        </div>
+        <div className="ai-insight-row">
+          <span className="text-secondary">Potential value</span>
+          <strong className="ai-insight-value">$18,450</strong>
+        </div>
+        <div className="ai-insight-row">
+          <span className="text-secondary">Close probability</span>
+          <strong className="ai-insight-value">84%</strong>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── Contact Block ─────────────────────────────────────────────── */
+function ContactBlock({ contact, label }: { contact: Contact; label: string }) {
+  return (
+    <article className="contact-block">
+      <div className="contact-block-head">
+        <div>
+          <span className="text-label">{label}</span>
+          <h3 className="contact-name">
+            {contact.firstName} {contact.lastName}
+          </h3>
+          <p className="text-secondary">{contact.relationship}</p>
+        </div>
+        <div className="contact-actions">
+          <button type="button" className="icon-button small" aria-label={`Call ${contact.firstName}`} title="Call">
+            <Phone size={15} />
+          </button>
+          <button type="button" className="icon-button small" aria-label={`Email ${contact.firstName}`} title="Email">
+            <Mail size={15} />
+          </button>
+          <button type="button" className="icon-button small" aria-label={`Message ${contact.firstName}`} title="Message">
+            <MessageSquare size={15} />
+          </button>
+        </div>
+      </div>
+      <ul className="contact-insights">
+        <li>
+          <span className="text-meta">Preferred</span>
+          <span>{contact.preferred}</span>
+        </li>
+        <li>
+          <span className="text-meta">Last reply</span>
+          <span>{contact.lastInteraction ?? "—"}</span>
+        </li>
+        <li>
+          <span className="text-meta">Response rate</span>
+          <span>{contact.responseRate ?? "—"}</span>
+        </li>
+      </ul>
+    </article>
+  );
+}
+
+/* ── Contacts Card ─────────────────────────────────────────────── */
+function ContactsCard({
+  contacts,
+  openDrawer
+}: {
+  contacts: Contact[];
+  openDrawer: () => void;
+}) {
+  return (
+    <section className="surface side-card contacts-card flow-order-7">
+      <div className="panel-head">
+        <h2 className="section-title">Contacts</h2>
+        <button className="text-link" type="button" onClick={openDrawer}>
+          <Plus size={14} aria-hidden="true" />
+          Add another contact
+        </button>
+      </div>
+      <ContactBlock contact={primaryContact} label="Primary contact" />
+      {contacts.map((contact) => (
+        <ContactBlock
+          key={`${contact.email}-${contact.phone}`}
+          contact={contact}
+          label="Secondary contact"
+        />
+      ))}
+    </section>
+  );
+}
+
+/* ── Tasks Card ────────────────────────────────────────────────── */
+function TasksCard({
+  tasks,
+  completeTask,
+  openTaskDrawer
+}: {
+  tasks: TaskItem[];
+  completeTask: (taskId: number, taskTitle: string) => void;
+  openTaskDrawer: () => void;
+}) {
+  return (
+    <section className="surface side-card tasks-card flow-order-6">
+      <div className="panel-head">
+        <div className="panel-title-group">
+          <h2 className="section-title">Today&apos;s tasks</h2>
+          <span className="count-pill">{tasks.length}</span>
+        </div>
+        <button className="text-link" type="button" onClick={openTaskDrawer}>
+          <Plus size={14} aria-hidden="true" />
+          Add task
+        </button>
+      </div>
+      <div className="task-list">
+        {tasks.length ? (
+          tasks.map((task) => (
+            <label className="task-row" key={task.id}>
+              <input
+                type="checkbox"
+                onChange={() => completeTask(task.id, task.title)}
+                aria-label={`Complete ${task.title}`}
+              />
+              <span>{task.title}</span>
+            </label>
+          ))
+        ) : (
+          <p className="empty-text text-secondary">All open tasks are complete.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ── Insurance Fields ──────────────────────────────────────────── */
+function InsuranceFields() {
+  return (
+    <dl className="field-list metadata-fields">
+      <div>
+        <dt className="text-label">Carrier</dt>
+        <dd>State Farm</dd>
+      </div>
+      <div>
+        <dt className="text-label">Claim number</dt>
+        <dd className="text-meta-value">CLM-582741</dd>
+      </div>
+      <div>
+        <dt className="text-label">Deductible</dt>
+        <dd>$1,500</dd>
+      </div>
+      <div>
+        <dt className="text-label">Adjuster</dt>
+        <dd>John Carter</dd>
+      </div>
+      <div>
+        <dt className="text-label">Inspection date</dt>
+        <dd>Jun 4, 2026</dd>
+      </div>
+    </dl>
+  );
+}
+
+/* ── Job Details Fields ────────────────────────────────────────── */
+function JobDetailsFields() {
+  return (
+    <dl className="field-list metadata-fields">
+      <div>
+        <dt className="text-label">Stage</dt>
+        <dd>Estimate — In Review</dd>
+      </div>
+      <div>
+        <dt className="text-label">Roof type</dt>
+        <dd>Architectural Shingle</dd>
+      </div>
+      <div>
+        <dt className="text-label">Damage type</dt>
+        <dd>Hail damage</dd>
+      </div>
+      <div>
+        <dt className="text-label">Sq footage</dt>
+        <dd>2,400 sq ft</dd>
+      </div>
+      <div>
+        <dt className="text-label">Stories</dt>
+        <dd>2</dd>
+      </div>
+      <div>
+        <dt className="text-label">Job value</dt>
+        <dd>$18,450</dd>
+      </div>
+      <div>
+        <dt className="text-label">Assigned rep</dt>
+        <dd>Dana Kim</dd>
+      </div>
+    </dl>
+  );
+}
+
+/* ── Collapsible Card ──────────────────────────────────────────── */
+function CollapsibleCard({
+  title,
+  subtitle,
+  children,
+  className = "",
+  defaultOpen = true,
+  icon
+}: {
+  title: string;
+  subtitle?: string;
+  children: ReactNode;
+  className?: string;
+  defaultOpen?: boolean;
+  icon?: ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <section className={`surface side-card collapsible ${className} ${open ? "open" : ""}`}>
+      <button
+        type="button"
+        className="collapse-trigger"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <div className="collapse-heading-group">
+          <h2 className="section-title">
+            {icon}
+            {title}
+          </h2>
+          {!open && subtitle && (
+            <p className="collapse-subtitle">{subtitle}</p>
+          )}
+        </div>
+        <ChevronDown size={18} className="collapse-chevron" aria-hidden="true" />
+      </button>
+      <div className="collapse-body">{open ? children : null}</div>
+    </section>
+  );
+}
+
+/* ── Add Task Drawer ───────────────────────────────────────────── */
+function AddTaskDrawer({
+  onClose,
+  onSave
+}: {
+  onClose: () => void;
+  onSave: (title: string) => void;
+}) {
+  const [isSaving, setIsSaving] = useState(false);
+
+  function submitTask(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const title = String(data.get("title") || "").trim();
+    if (!title) return;
+    setIsSaving(true);
+    window.setTimeout(() => {
+      onSave(title);
+      setIsSaving(false);
+    }, 700);
+  }
+
+  return (
+    <div className="drawer-layer" role="presentation">
+      <button className="drawer-backdrop" aria-label="Close task panel" onClick={onClose} disabled={isSaving} />
+      <aside className="drawer" aria-label="Add task">
+        <div className="drawer-header">
+          <h2 className="section-title">Add Task</h2>
+          <button className="icon-button" type="button" onClick={onClose} aria-label="Close" disabled={isSaving}>
+            <X size={18} />
+          </button>
+        </div>
+
+        {isSaving ? (
+          <div className="drawer-loading" role="status" aria-live="polite">
+            <Loader2 className="spin" size={22} aria-hidden="true" />
+            <strong>Saving…</strong>
+          </div>
+        ) : null}
+
+        <form className={`drawer-form ${isSaving ? "is-saving" : ""}`} onSubmit={submitTask}>
+          <label>
+            <span className="text-label">Task</span>
+            <input name="title" placeholder="e.g. Call adjuster for scope approval" required autoFocus />
+          </label>
+          <label>
+            <span className="text-label">Due date</span>
+            <input name="dueDate" type="date" defaultValue={new Date().toISOString().slice(0, 10)} />
+          </label>
+          <label>
+            <span className="text-label">Assigned to</span>
+            <select name="assignee" defaultValue="Dana Kim">
+              <option>Dana Kim</option>
+              <option>Unassigned</option>
+            </select>
+          </label>
+          <label>
+            <span className="text-label">Notes</span>
+            <textarea name="notes" placeholder="Optional details…" />
+          </label>
+
+          <div className="drawer-actions">
+            <button className="button ghost" type="button" onClick={onClose} disabled={isSaving}>
+              Cancel
+            </button>
+            <button className="button primary" type="submit" disabled={isSaving}>
+              {isSaving ? <Loader2 className="spin" size={16} aria-hidden="true" /> : null}
+              {isSaving ? "Saving…" : "Save Task"}
+            </button>
+          </div>
+        </form>
+      </aside>
+    </div>
+  );
+}
+
+/* ── Why This Design Works ─────────────────────────────────────── */
+function WhyThisDesignWorks() {
+  const pillars = [
+    {
+      title: "Clear Next Actions",
+      body: "Sales representatives instantly understand what should happen next."
+    },
+    {
+      title: "Faster Workflow",
+      body: "High-frequency actions remain visible and accessible."
+    },
+    {
+      title: "AI-Assisted Selling",
+      body: "The platform proactively guides users toward closing opportunities."
+    },
+    {
+      title: "Better Feedback",
+      body: "Every action confirms success, reducing uncertainty and increasing confidence."
+    },
+    {
+      title: "Modern SaaS Experience",
+      body: "A lighter, cleaner and more premium interface aligned with contemporary software."
+    }
+  ];
+
+  return (
+    <section className="presentation-slide surface" aria-labelledby="why-design-title">
+      <p className="text-label accent-label" id="why-design-eyebrow">
+        Presentation
+      </p>
+      <h2 className="page-title" id="why-design-title">
+        Why This Design Works
+      </h2>
+      <div className="pillar-grid">
+        {pillars.map((pillar) => (
+          <article key={pillar.title} className="pillar-card">
+            <h3 className="section-title">{pillar.title}</h3>
+            <p className="text-secondary">{pillar.body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ── Mobile Chrome ─────────────────────────────────────────────── */
+function MobileChrome({
+  selectedMode,
+  setSelectedMode
+}: {
+  selectedMode: ComposerMode;
+  setSelectedMode: (mode: ComposerMode) => void;
+}) {
+  return (
+    <>
+      <button type="button" className="mobile-proposal-fab">
+        <FileCheck2 size={18} aria-hidden="true" />
+        Create Proposal
+      </button>
+      <nav className="mobile-action-bar" aria-label="Quick actions">
+        {(Object.keys(actionConfig) as ComposerMode[]).map((mode) => {
+          const item = actionConfig[mode] as { label: string; icon: typeof FileCheck2 };
+          const Icon = item.icon;
+          return (
+            <button
+              key={mode}
+              type="button"
+              className={mode === selectedMode ? "mobile-action active" : "mobile-action"}
+              onClick={() => {
+                setSelectedMode(mode);
+                document.querySelector(".composer-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
+              <Icon size={18} aria-hidden="true" />
+              {item.label}
+            </button>
+          );
+        })}
+      </nav>
+    </>
+  );
+}
+
+/* ── Contact Drawer ────────────────────────────────────────────── */
+function ContactDrawer({
+  onClose,
+  onSave
+}: {
+  onClose: () => void;
+  onSave: (contact: Contact) => void;
+}) {
+  const [isSaving, setIsSaving] = useState(false);
+
+  function submitContact(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSaving(true);
+    const data = new FormData(event.currentTarget);
+
+    window.setTimeout(() => {
+      onSave({
+        firstName: String(data.get("firstName") || ""),
+        lastName: String(data.get("lastName") || ""),
+        relationship: String(data.get("relationship") || ""),
+        phone: String(data.get("phone") || ""),
+        email: String(data.get("email") || ""),
+        preferred: String(data.get("preferred") || "Phone"),
+        lastInteraction: "Just now",
+        responseRate: "—"
+      });
+      setIsSaving(false);
+    }, 900);
+  }
+
+  return (
+    <div className="drawer-layer" role="presentation">
+      <button className="drawer-backdrop" aria-label="Close contact panel" onClick={onClose} disabled={isSaving} />
+      <aside className="drawer" aria-label="Add contact">
+        <p className="flow-step text-meta">Step 2 of 4 — Add contact</p>
+        <div className="drawer-header">
+          <h2 className="section-title">Add Contact</h2>
+          <button className="icon-button" type="button" onClick={onClose} aria-label="Close" disabled={isSaving}>
+            <X size={18} />
+          </button>
+        </div>
+
+        {isSaving ? (
+          <div className="drawer-loading" role="status" aria-live="polite">
+            <Loader2 className="spin" size={22} aria-hidden="true" />
+            <strong>Saving…</strong>
+            <span className="text-secondary">Step 3 of 4 — Adding contact to this job</span>
+          </div>
+        ) : null}
+
+        <form className={`drawer-form ${isSaving ? "is-saving" : ""}`} onSubmit={submitContact}>
+          <div className="two-col">
+            <label>
+              <span className="text-label">First Name</span>
+              <input name="firstName" placeholder="Michael" required />
+            </label>
+            <label>
+              <span className="text-label">Last Name</span>
+              <input name="lastName" placeholder="Weiss" required />
+            </label>
+          </div>
+          <label>
+            <span className="text-label">Relationship</span>
+            <input name="relationship" placeholder="Spouse" required />
+          </label>
+          <label>
+            <span className="text-label">Phone</span>
+            <input name="phone" placeholder="+1 (512) 555-0173" required />
+          </label>
+          <label>
+            <span className="text-label">Email</span>
+            <input name="email" placeholder="name@example.com" type="email" required />
+          </label>
+          <label>
+            <span className="text-label">Preferred Contact Method</span>
+            <select name="preferred" defaultValue="SMS">
+              <option>Phone</option>
+              <option>Email</option>
+              <option>SMS</option>
+            </select>
+          </label>
+
+          <div className="drawer-actions">
+            <button className="button ghost" type="button" onClick={onClose} disabled={isSaving}>
+              Cancel
+            </button>
+            <button className="button primary" type="submit" disabled={isSaving}>
+              {isSaving ? <Loader2 className="spin" size={16} aria-hidden="true" /> : null}
+              {isSaving ? "Saving…" : "Save Contact"}
+            </button>
+          </div>
+        </form>
+      </aside>
+    </div>
+  );
+}
