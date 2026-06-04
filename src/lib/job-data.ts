@@ -35,9 +35,14 @@ export type Contact = {
   isPrimary?: boolean;
 };
 
+export type TaskPriority = "high" | "medium" | "low";
+
 export type TaskItem = {
   id: number;
   title: string;
+  priority?: TaskPriority;
+  dueDate?: string;
+  tags?: string[];
 };
 
 export type WorkflowStage = {

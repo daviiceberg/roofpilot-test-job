@@ -20,6 +20,7 @@ import {
   type MaterialOrder,
   type MaterialOrderStatus,
   type TaskItem,
+  type TaskPriority,
   type AiAction,
   type TimelineFilter,
   type TimelineItem,
@@ -72,9 +73,9 @@ export function JobWorkspace() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>(initialWorkOrders);
   const [activeTab, setActiveTab] = useState<ContentTab>("overview");
   const [tasks, setTasks] = useState<TaskItem[]>([
-    { id: 1, title: "Review estimate with Hannah" },
-    { id: 2, title: "Confirm material selections" },
-    { id: 3, title: "Send proposal once approved" }
+    { id: 1, title: "Review estimate with Hannah", priority: "high", dueDate: "Jun 5, 2026", tags: ["estimate", "homeowner"] },
+    { id: 2, title: "Confirm material selections", priority: "medium", dueDate: "Jun 6, 2026", tags: ["materials"] },
+    { id: 3, title: "Send proposal once approved", priority: "medium", tags: ["proposal"] }
   ]);
 
   const selected = actionConfig[selectedMode] as {
@@ -199,6 +200,7 @@ export function JobWorkspace() {
           <div className="left-rail">
             {activeTab === "overview" && (
               <>
+                <FinancialSummary onCreateProposal={() => showToast("✓ Proposal draft started")} />
                 <ActivityComposer
                   selectedMode={selectedMode}
                   setSelectedMode={setSelectedMode}
@@ -288,8 +290,8 @@ export function JobWorkspace() {
         {isTaskDrawerOpen ? (
           <AddTaskDrawer
             onClose={() => setIsTaskDrawerOpen(false)}
-            onSave={(title) => {
-              setTasks((prev) => [...prev, { id: Date.now(), title }]);
+            onSave={(task) => {
+              setTasks((prev) => [...prev, { id: Date.now(), ...task }]);
               setIsTaskDrawerOpen(false);
               showToast("✓ Task added");
             }}
@@ -297,6 +299,57 @@ export function JobWorkspace() {
         ) : null}
       </main>
     </AppShell>
+  );
+}
+
+/* ── Financial Summary ─────────────────────────────────────────── */
+function FinancialSummary({ onCreateProposal }: { onCreateProposal: () => void }) {
+  const items = [
+    {
+      label: "Estimate",
+      value: "$18,450",
+      status: "In Review",
+      statusClass: "fin-status-review",
+      action: null
+    },
+    {
+      label: "Proposal",
+      value: "—",
+      status: "Not issued",
+      statusClass: "fin-status-pending",
+      action: { label: "Create Proposal", onClick: onCreateProposal }
+    },
+    {
+      label: "Invoice",
+      value: "—",
+      status: "Not created",
+      statusClass: "fin-status-pending",
+      action: null
+    }
+  ];
+
+  return (
+    <section className="surface fin-summary">
+      <div className="panel-head">
+        <h2 className="section-title">Financial Summary</h2>
+      </div>
+      <div className="fin-rows">
+        {items.map((item) => (
+          <div key={item.label} className="fin-row">
+            <span className="fin-label text-secondary">{item.label}</span>
+            <div className="fin-right">
+              {item.value !== "—" && <strong className="fin-value">{item.value}</strong>}
+              <span className={`fin-status ${item.statusClass}`}>{item.status}</span>
+              {item.action && (
+                <button className="text-link fin-action" type="button" onClick={item.action.onClick}>
+                  {item.action.label}
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -1019,10 +1072,16 @@ function TasksCard({
           <h2 className="section-title">Today&apos;s tasks</h2>
           <span className="count-pill">{tasks.length}</span>
         </div>
-        <button className="text-link" type="button" onClick={openTaskDrawer}>
-          <Plus size={14} aria-hidden="true" />
-          Add task
-        </button>
+        <div className="tasks-header-actions">
+          <button className="text-link" type="button" onClick={openTaskDrawer}>
+            <Plus size={14} aria-hidden="true" />
+            Add task
+          </button>
+          <span className="tasks-header-sep">·</span>
+          <button className="text-link" type="button" onClick={() => {}}>
+            View all
+          </button>
+        </div>
       </div>
       <div className="task-list">
         {tasks.length ? (
@@ -1033,7 +1092,22 @@ function TasksCard({
                 onChange={() => completeTask(task.id, task.title)}
                 aria-label={`Complete ${task.title}`}
               />
-              <span>{task.title}</span>
+              <div className="task-body">
+                <div className="task-title-row">
+                  <span className="task-title">{task.title}</span>
+                  {task.priority && (
+                    <span className={`task-priority task-priority-${task.priority}`}>
+                      {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                    </span>
+                  )}
+                </div>
+                <div className="task-meta-row">
+                  {task.dueDate && <span className="task-due">{task.dueDate}</span>}
+                  {task.tags?.map((tag) => (
+                    <span key={tag} className="task-tag">{tag}</span>
+                  ))}
+                </div>
+              </div>
             </label>
           ))
         ) : (
@@ -1123,6 +1197,10 @@ function JobDetailsFields() {
       <div>
         <dt className="text-label">Gated community</dt>
         <dd>No</dd>
+      </div>
+      <div>
+        <dt className="text-label">Gate code</dt>
+        <dd className="text-secondary">—</dd>
       </div>
       <div>
         <dt className="text-label">Job value</dt>
@@ -1646,7 +1724,7 @@ function AddTaskDrawer({
   onSave
 }: {
   onClose: () => void;
-  onSave: (title: string) => void;
+  onSave: (task: Omit<TaskItem, "id">) => void;
 }) {
   const [isSaving, setIsSaving] = useState(false);
 
@@ -1655,9 +1733,20 @@ function AddTaskDrawer({
     const data = new FormData(event.currentTarget);
     const title = String(data.get("title") || "").trim();
     if (!title) return;
+    const rawDate = String(data.get("dueDate") || "");
+    const dueDate = rawDate
+      ? new Date(rawDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : undefined;
+    const rawTags = String(data.get("tags") || "").trim();
+    const tags = rawTags ? rawTags.split(",").map((t) => t.trim()).filter(Boolean) : undefined;
     setIsSaving(true);
     window.setTimeout(() => {
-      onSave(title);
+      onSave({
+        title,
+        priority: String(data.get("priority") || "") as TaskPriority || undefined,
+        dueDate,
+        tags
+      });
       setIsSaving(false);
     }, 700);
   }
@@ -1685,16 +1774,31 @@ function AddTaskDrawer({
             <span className="text-label">Task</span>
             <input name="title" placeholder="e.g. Call adjuster for scope approval" required autoFocus />
           </label>
-          <label>
-            <span className="text-label">Due date</span>
-            <input name="dueDate" type="date" defaultValue={new Date().toISOString().slice(0, 10)} />
-          </label>
+          <div className="two-col">
+            <label>
+              <span className="text-label">Priority</span>
+              <select name="priority" defaultValue="medium">
+                <option value="">No priority</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </label>
+            <label>
+              <span className="text-label">Due date</span>
+              <input name="dueDate" type="date" defaultValue={new Date().toISOString().slice(0, 10)} />
+            </label>
+          </div>
           <label>
             <span className="text-label">Assigned to</span>
             <select name="assignee" defaultValue="Dana Kim">
               <option>Dana Kim</option>
               <option>Unassigned</option>
             </select>
+          </label>
+          <label>
+            <span className="text-label">Tags <span className="text-secondary" style={{fontWeight:400}}>(comma separated)</span></span>
+            <input name="tags" placeholder="e.g. estimate, homeowner" />
           </label>
           <label>
             <span className="text-label">Notes</span>
