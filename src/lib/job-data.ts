@@ -119,6 +119,41 @@ export const timelineMeta: Record<
   contact: { icon: UserPlus, colorClass: "tl-contact", filter: "system" }
 };
 
+export type MaterialOrderStatus = "pending" | "ordered" | "in-transit" | "delivered" | "cancelled";
+export type WorkOrderStatus = "not-scheduled" | "scheduled" | "in-progress" | "complete";
+
+export type MaterialOrder = {
+  id: number;
+  item: string;
+  qty: number;
+  unit: string;
+  supplier: string;
+  status: MaterialOrderStatus;
+  unitCost: number;
+};
+
+export type WorkOrder = {
+  id: number;
+  type: string;
+  crew: string;
+  scheduledDate: string;
+  status: WorkOrderStatus;
+  notes?: string;
+};
+
+export const initialMaterialOrders: MaterialOrder[] = [
+  { id: 1, item: "Architectural Shingles — IKO Dynasty", qty: 40, unit: "SQ", supplier: "ABC Supply", status: "pending", unitCost: 155 },
+  { id: 2, item: "Ridge Cap Shingles", qty: 4, unit: "bundle", supplier: "ABC Supply", status: "pending", unitCost: 70 },
+  { id: 3, item: "Ice & Water Shield", qty: 2, unit: "roll", supplier: "ABC Supply", status: "pending", unitCost: 170 },
+  { id: 4, item: "Synthetic Underlayment", qty: 10, unit: "roll", supplier: "ABC Supply", status: "pending", unitCost: 45 },
+  { id: 5, item: "Drip Edge (Aluminum)", qty: 8, unit: "stick", supplier: "ABC Supply", status: "pending", unitCost: 12 },
+];
+
+export const initialWorkOrders: WorkOrder[] = [
+  { id: 1, type: "Full Roof Replacement", crew: "Dana Kim", scheduledDate: "Tentative Jun 18–19", status: "not-scheduled", notes: "Pending proposal approval" },
+  { id: 2, type: "Gutter Inspection & Clean", crew: "Dana Kim", scheduledDate: "Tentative Jun 20", status: "not-scheduled" },
+];
+
 export type AiAction = "proposal" | "message" | "notes";
 
 export type AiRecommendation = {

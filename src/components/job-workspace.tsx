@@ -6,7 +6,9 @@ import {
   aiRecommendations,
   defaultSecondaryContact,
   emailTemplates,
+  initialMaterialOrders,
   initialTimeline,
+  initialWorkOrders,
   matchesTimelineFilter,
   messageTemplates,
   nowLabel,
@@ -15,10 +17,14 @@ import {
   workflowStages,
   type ComposerMode,
   type Contact,
+  type MaterialOrder,
+  type MaterialOrderStatus,
   type TaskItem,
   type AiAction,
   type TimelineFilter,
-  type TimelineItem
+  type TimelineItem,
+  type WorkOrder,
+  type WorkOrderStatus
 } from "@/lib/job-data";
 import {
   AlertTriangle,
@@ -35,19 +41,21 @@ import {
   MessageSquare,
   PackageCheck,
   Paperclip,
+  Pencil,
   Phone,
   Plus,
   RefreshCw,
   Send,
   ShieldCheck,
   Sparkles,
+  Tag,
   UserPlus,
   X,
   Zap
 } from "lucide-react";
 import { FormEvent, useMemo, useState, type ReactNode } from "react";
 
-type ContentTab = "overview" | "activity" | "documents" | "proposals";
+type ContentTab = "overview" | "activity" | "documents" | "proposals" | "production";
 
 export function JobWorkspace() {
   const [selectedMode, setSelectedMode] = useState<ComposerMode>("note");
@@ -60,6 +68,8 @@ export function JobWorkspace() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isTaskDrawerOpen, setIsTaskDrawerOpen] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([defaultSecondaryContact]);
+  const [materialOrders, setMaterialOrders] = useState<MaterialOrder[]>(initialMaterialOrders);
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>(initialWorkOrders);
   const [activeTab, setActiveTab] = useState<ContentTab>("overview");
   const [tasks, setTasks] = useState<TaskItem[]>([
     { id: 1, title: "Review estimate with Hannah" },
@@ -181,6 +191,7 @@ export function JobWorkspace() {
           activityCount={timeline.length}
           documentCount={5}
           proposalCount={2}
+          productionCount={materialOrders.length + workOrders.length}
         />
 
         <section className="layout-shell">
@@ -213,6 +224,14 @@ export function JobWorkspace() {
             {activeTab === "proposals" && (
               <ProposalsView onCreateProposal={() => showToast("✓ Proposal draft started")} />
             )}
+            {activeTab === "production" && (
+              <ProductionView
+                materialOrders={materialOrders}
+                setMaterialOrders={setMaterialOrders}
+                workOrders={workOrders}
+                setWorkOrders={setWorkOrders}
+              />
+            )}
           </div>
 
           {/* Right rail — always visible regardless of active tab */}
@@ -232,6 +251,8 @@ export function JobWorkspace() {
             />
             <TasksCard tasks={tasks} completeTask={completeTask} openTaskDrawer={() => setIsTaskDrawerOpen(true)} />
             <ContactsCard contacts={contacts} openDrawer={() => setIsDrawerOpen(true)} />
+            <DescriptionCard />
+            <TagsCard />
             <CollapsibleCard
               title="Insurance"
               subtitle="State Farm · $1,500 ded. · CLM-582741"
@@ -405,19 +426,22 @@ function ContentTabBar({
   setActiveTab,
   activityCount,
   documentCount,
-  proposalCount
+  proposalCount,
+  productionCount
 }: {
   activeTab: ContentTab;
   setActiveTab: (tab: ContentTab) => void;
   activityCount: number;
   documentCount: number;
   proposalCount: number;
+  productionCount: number;
 }) {
   const tabs: { id: ContentTab; label: string; count?: number }[] = [
     { id: "overview", label: "Overview" },
     { id: "activity", label: "Activity", count: activityCount },
     { id: "documents", label: "Documents", count: documentCount },
-    { id: "proposals", label: "Proposals", count: proposalCount }
+    { id: "proposals", label: "Proposals", count: proposalCount },
+    { id: "production", label: "Production", count: productionCount }
   ];
 
   return (
@@ -1033,8 +1057,16 @@ function InsuranceFields() {
         <dd className="text-meta-value">CLM-582741</dd>
       </div>
       <div>
+        <dt className="text-label">Policy number</dt>
+        <dd className="text-meta-value">SF-4471-2026</dd>
+      </div>
+      <div>
         <dt className="text-label">Deductible</dt>
         <dd>$1,500</dd>
+      </div>
+      <div>
+        <dt className="text-label">Date of loss</dt>
+        <dd>May 22, 2026</dd>
       </div>
       <div>
         <dt className="text-label">Adjuster</dt>
@@ -1042,7 +1074,7 @@ function InsuranceFields() {
       </div>
       <div>
         <dt className="text-label">Inspection date</dt>
-        <dd>Jun 4, 2026</dd>
+        <dd>Jun 2, 2026</dd>
       </div>
     </dl>
   );
@@ -1057,8 +1089,24 @@ function JobDetailsFields() {
         <dd>Estimate — In Review</dd>
       </div>
       <div>
+        <dt className="text-label">Type</dt>
+        <dd>Residential</dd>
+      </div>
+      <div>
+        <dt className="text-label">Lead source</dt>
+        <dd>Referral</dd>
+      </div>
+      <div>
+        <dt className="text-label">Location</dt>
+        <dd>Dripping Springs Branch</dd>
+      </div>
+      <div>
         <dt className="text-label">Roof type</dt>
         <dd>Architectural Shingle</dd>
+      </div>
+      <div>
+        <dt className="text-label">Roof age</dt>
+        <dd>14 years</dd>
       </div>
       <div>
         <dt className="text-label">Damage type</dt>
@@ -1073,6 +1121,10 @@ function JobDetailsFields() {
         <dd>2</dd>
       </div>
       <div>
+        <dt className="text-label">Gated community</dt>
+        <dd>No</dd>
+      </div>
+      <div>
         <dt className="text-label">Job value</dt>
         <dd>$18,450</dd>
       </div>
@@ -1080,7 +1132,123 @@ function JobDetailsFields() {
         <dt className="text-label">Assigned rep</dt>
         <dd>Dana Kim</dd>
       </div>
+      <div>
+        <dt className="text-label">Subcontractors</dt>
+        <dd className="text-secondary">None assigned</dd>
+      </div>
     </dl>
+  );
+}
+
+/* ── Description Card ─────────────────────────────────────────── */
+function DescriptionCard() {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState("");
+
+  return (
+    <section className="surface side-card description-card flow-order-10">
+      <div className="panel-head">
+        <h2 className="section-title">Description</h2>
+        {!editing && value && (
+          <button
+            className="icon-button"
+            type="button"
+            onClick={() => setEditing(true)}
+            aria-label="Edit description"
+          >
+            <Pencil size={14} />
+          </button>
+        )}
+      </div>
+      {editing ? (
+        <textarea
+          className="description-textarea"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={() => setEditing(false)}
+          autoFocus
+          placeholder="Add a description…"
+          rows={3}
+        />
+      ) : (
+        <button
+          type="button"
+          className="description-preview"
+          onClick={() => setEditing(true)}
+        >
+          {value ? (
+            <span className="description-text">{value}</span>
+          ) : (
+            <span className="text-secondary">Add a description…</span>
+          )}
+        </button>
+      )}
+    </section>
+  );
+}
+
+/* ── Tags Card ─────────────────────────────────────────────────── */
+function TagsCard() {
+  const [tags, setTags] = useState<string[]>([]);
+  const [adding, setAdding] = useState(false);
+  const [newTag, setNewTag] = useState("");
+
+  function commitTag() {
+    const t = newTag.trim();
+    if (t && !tags.includes(t)) setTags((prev) => [...prev, t]);
+    setNewTag("");
+    setAdding(false);
+  }
+
+  function removeTag(tag: string) {
+    setTags((prev) => prev.filter((t) => t !== tag));
+  }
+
+  return (
+    <section className="surface side-card tags-card flow-order-11">
+      <div className="panel-head">
+        <h2 className="section-title">
+          <Tag size={14} aria-hidden="true" />
+          Tags
+        </h2>
+        <button className="text-link" type="button" onClick={() => setAdding(true)}>
+          <Plus size={14} aria-hidden="true" />
+          Add tag
+        </button>
+      </div>
+      <div className="tags-list">
+        {tags.map((tag) => (
+          <span key={tag} className="tag-pill">
+            {tag}
+            <button
+              type="button"
+              className="tag-remove"
+              onClick={() => removeTag(tag)}
+              aria-label={`Remove ${tag}`}
+            >
+              <X size={10} />
+            </button>
+          </span>
+        ))}
+        {adding && (
+          <input
+            className="tag-input"
+            value={newTag}
+            onChange={(e) => setNewTag(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); commitTag(); }
+              if (e.key === "Escape") { setAdding(false); setNewTag(""); }
+            }}
+            onBlur={commitTag}
+            autoFocus
+            placeholder="Tag name…"
+          />
+        )}
+        {!tags.length && !adding && (
+          <p className="text-secondary" style={{ fontSize: "12px" }}>No tags added.</p>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -1123,6 +1291,352 @@ function CollapsibleCard({
       </button>
       <div className="collapse-body">{open ? children : null}</div>
     </section>
+  );
+}
+
+/* ── Production View ───────────────────────────────────────────── */
+const materialStatusMeta: Record<MaterialOrderStatus, { label: string; className: string }> = {
+  pending:    { label: "Pending",    className: "prod-status prod-status-pending" },
+  ordered:    { label: "Ordered",    className: "prod-status prod-status-ordered" },
+  "in-transit": { label: "In transit", className: "prod-status prod-status-transit" },
+  delivered:  { label: "Delivered",  className: "prod-status prod-status-delivered" },
+  cancelled:  { label: "Cancelled",  className: "prod-status prod-status-cancelled" },
+};
+
+const workStatusMeta: Record<WorkOrderStatus, { label: string; className: string }> = {
+  "not-scheduled": { label: "Not scheduled", className: "prod-status prod-status-pending" },
+  scheduled:       { label: "Scheduled",      className: "prod-status prod-status-ordered" },
+  "in-progress":   { label: "In progress",    className: "prod-status prod-status-transit" },
+  complete:        { label: "Complete",        className: "prod-status prod-status-delivered" },
+};
+
+function ProductionView({
+  materialOrders,
+  setMaterialOrders,
+  workOrders,
+  setWorkOrders
+}: {
+  materialOrders: MaterialOrder[];
+  setMaterialOrders: (orders: MaterialOrder[]) => void;
+  workOrders: WorkOrder[];
+  setWorkOrders: (orders: WorkOrder[]) => void;
+}) {
+  const [isMaterialDrawerOpen, setIsMaterialDrawerOpen] = useState(false);
+  const [isWorkDrawerOpen, setIsWorkDrawerOpen] = useState(false);
+  const materialTotal = materialOrders.reduce((sum, o) => sum + o.qty * o.unitCost, 0);
+
+  return (
+    <div className="production-view">
+      {isMaterialDrawerOpen && (
+        <AddMaterialOrderDrawer
+          onClose={() => setIsMaterialDrawerOpen(false)}
+          onSave={(order) => {
+            setMaterialOrders([...materialOrders, { ...order, id: Date.now() }]);
+            setIsMaterialDrawerOpen(false);
+          }}
+        />
+      )}
+      {isWorkDrawerOpen && (
+        <AddWorkOrderDrawer
+          onClose={() => setIsWorkDrawerOpen(false)}
+          onSave={(order) => {
+            setWorkOrders([...workOrders, { ...order, id: Date.now() }]);
+            setIsWorkDrawerOpen(false);
+          }}
+        />
+      )}
+
+      {/* Material Orders */}
+      <section className="surface production-card">
+        <div className="panel-head">
+          <div className="panel-title-group">
+            <h2 className="section-title">Material Orders</h2>
+            <span className="count-pill">{materialOrders.length}</span>
+          </div>
+          <button className="text-link" type="button" onClick={() => setIsMaterialDrawerOpen(true)}>
+            <Plus size={14} aria-hidden="true" />
+            Add order
+          </button>
+        </div>
+
+        {materialOrders.length === 0 ? (
+          <div className="prod-empty">
+            <p className="text-secondary">No material orders yet.</p>
+            <button className="button ghost compact" type="button" onClick={() => setIsMaterialDrawerOpen(true)}>
+              <Plus size={14} /> Add first order
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="prod-table-wrap">
+              <table className="prod-table">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th className="prod-th-num">Qty</th>
+                    <th>Unit</th>
+                    <th>Supplier</th>
+                    <th className="prod-th-num">Unit cost</th>
+                    <th className="prod-th-num">Total</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {materialOrders.map((order) => (
+                    <tr key={order.id}>
+                      <td className="prod-td-item">{order.item}</td>
+                      <td className="prod-td-num">{order.qty}</td>
+                      <td className="prod-td-muted">{order.unit}</td>
+                      <td className="prod-td-muted">{order.supplier || "—"}</td>
+                      <td className="prod-td-num">{order.unitCost > 0 ? `$${order.unitCost.toLocaleString()}` : "—"}</td>
+                      <td className="prod-td-num prod-td-total">${(order.qty * order.unitCost).toLocaleString()}</td>
+                      <td>
+                        <span className={materialStatusMeta[order.status].className}>
+                          {materialStatusMeta[order.status].label}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="prod-total-row">
+                    <td colSpan={5}>Est. materials total</td>
+                    <td className="prod-td-num">${materialTotal.toLocaleString()}</td>
+                    <td />
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <p className="prod-note text-secondary">
+              Orders pending — awaiting proposal approval before purchasing.
+            </p>
+          </>
+        )}
+      </section>
+
+      {/* Work Orders */}
+      <section className="surface production-card">
+        <div className="panel-head">
+          <div className="panel-title-group">
+            <h2 className="section-title">Work Orders</h2>
+            <span className="count-pill">{workOrders.length}</span>
+          </div>
+          <button className="text-link" type="button" onClick={() => setIsWorkDrawerOpen(true)}>
+            <Plus size={14} aria-hidden="true" />
+            Add work order
+          </button>
+        </div>
+
+        {workOrders.length === 0 ? (
+          <div className="prod-empty">
+            <p className="text-secondary">No work orders yet.</p>
+            <button className="button ghost compact" type="button" onClick={() => setIsWorkDrawerOpen(true)}>
+              <Plus size={14} /> Add first work order
+            </button>
+          </div>
+        ) : (
+          <div className="work-order-list">
+            {workOrders.map((wo) => (
+              <div key={wo.id} className="work-order-row">
+                <div className="work-order-main">
+                  <span className="work-order-type">{wo.type}</span>
+                  {wo.notes && <p className="text-secondary work-order-notes">{wo.notes}</p>}
+                </div>
+                <div className="work-order-meta">
+                  <span className="text-secondary">{wo.crew}</span>
+                  <span className="text-secondary">{wo.scheduledDate}</span>
+                  <span className={workStatusMeta[wo.status].className}>
+                    {workStatusMeta[wo.status].label}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+/* ── Add Material Order Drawer ─────────────────────────────────── */
+function AddMaterialOrderDrawer({
+  onClose,
+  onSave
+}: {
+  onClose: () => void;
+  onSave: (order: Omit<MaterialOrder, "id">) => void;
+}) {
+  const [isSaving, setIsSaving] = useState(false);
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    setIsSaving(true);
+    window.setTimeout(() => {
+      onSave({
+        item: String(data.get("item") || ""),
+        qty: Number(data.get("qty") || 1),
+        unit: String(data.get("unit") || "unit"),
+        supplier: String(data.get("supplier") || ""),
+        status: String(data.get("status") || "pending") as MaterialOrderStatus,
+        unitCost: Number(data.get("unitCost") || 0)
+      });
+      setIsSaving(false);
+    }, 700);
+  }
+
+  return (
+    <div className="drawer-layer" role="presentation">
+      <button className="drawer-backdrop" aria-label="Close" onClick={onClose} disabled={isSaving} />
+      <aside className="drawer" aria-label="Add material order">
+        <div className="drawer-header">
+          <h2 className="section-title">Add Material Order</h2>
+          <button className="icon-button" type="button" onClick={onClose} aria-label="Close" disabled={isSaving}>
+            <X size={18} />
+          </button>
+        </div>
+        {isSaving ? (
+          <div className="drawer-loading" role="status" aria-live="polite">
+            <Loader2 className="spin" size={22} aria-hidden="true" />
+            <strong>Saving…</strong>
+          </div>
+        ) : null}
+        <form className={`drawer-form ${isSaving ? "is-saving" : ""}`} onSubmit={submit}>
+          <label>
+            <span className="text-label">Item</span>
+            <input name="item" placeholder="e.g. Architectural Shingles — IKO Dynasty" required autoFocus />
+          </label>
+          <div className="two-col">
+            <label>
+              <span className="text-label">Qty</span>
+              <input name="qty" type="number" min="0" step="0.1" defaultValue="1" />
+            </label>
+            <label>
+              <span className="text-label">Unit</span>
+              <select name="unit" defaultValue="SQ">
+                <option>SQ</option>
+                <option>bundle</option>
+                <option>roll</option>
+                <option>box</option>
+                <option>stick</option>
+                <option>sheet</option>
+                <option>unit</option>
+              </select>
+            </label>
+          </div>
+          <label>
+            <span className="text-label">Supplier</span>
+            <input name="supplier" placeholder="e.g. ABC Supply" />
+          </label>
+          <label>
+            <span className="text-label">Unit cost ($)</span>
+            <input name="unitCost" type="number" min="0" step="0.01" defaultValue="0" placeholder="0.00" />
+          </label>
+          <label>
+            <span className="text-label">Status</span>
+            <select name="status" defaultValue="pending">
+              <option value="pending">Pending</option>
+              <option value="ordered">Ordered</option>
+              <option value="in-transit">In transit</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </label>
+          <div className="drawer-actions">
+            <button className="button ghost" type="button" onClick={onClose} disabled={isSaving}>Cancel</button>
+            <button className="button primary" type="submit" disabled={isSaving}>
+              {isSaving ? <Loader2 className="spin" size={16} aria-hidden="true" /> : null}
+              {isSaving ? "Saving…" : "Add Order"}
+            </button>
+          </div>
+        </form>
+      </aside>
+    </div>
+  );
+}
+
+/* ── Add Work Order Drawer ──────────────────────────────────────── */
+function AddWorkOrderDrawer({
+  onClose,
+  onSave
+}: {
+  onClose: () => void;
+  onSave: (order: Omit<WorkOrder, "id">) => void;
+}) {
+  const [isSaving, setIsSaving] = useState(false);
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const rawDate = String(data.get("scheduledDate") || "");
+    const scheduledDate = rawDate
+      ? new Date(rawDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : "TBD";
+    setIsSaving(true);
+    window.setTimeout(() => {
+      onSave({
+        type: String(data.get("type") || ""),
+        crew: String(data.get("crew") || "Dana Kim"),
+        scheduledDate,
+        status: String(data.get("status") || "not-scheduled") as WorkOrderStatus,
+        notes: String(data.get("notes") || "") || undefined
+      });
+      setIsSaving(false);
+    }, 700);
+  }
+
+  return (
+    <div className="drawer-layer" role="presentation">
+      <button className="drawer-backdrop" aria-label="Close" onClick={onClose} disabled={isSaving} />
+      <aside className="drawer" aria-label="Add work order">
+        <div className="drawer-header">
+          <h2 className="section-title">Add Work Order</h2>
+          <button className="icon-button" type="button" onClick={onClose} aria-label="Close" disabled={isSaving}>
+            <X size={18} />
+          </button>
+        </div>
+        {isSaving ? (
+          <div className="drawer-loading" role="status" aria-live="polite">
+            <Loader2 className="spin" size={22} aria-hidden="true" />
+            <strong>Saving…</strong>
+          </div>
+        ) : null}
+        <form className={`drawer-form ${isSaving ? "is-saving" : ""}`} onSubmit={submit}>
+          <label>
+            <span className="text-label">Work order type</span>
+            <input name="type" placeholder="e.g. Full Roof Replacement" required autoFocus />
+          </label>
+          <label>
+            <span className="text-label">Assigned crew</span>
+            <input name="crew" placeholder="e.g. Dana Kim" defaultValue="Dana Kim" />
+          </label>
+          <label>
+            <span className="text-label">Scheduled date</span>
+            <input name="scheduledDate" type="date" />
+          </label>
+          <label>
+            <span className="text-label">Status</span>
+            <select name="status" defaultValue="not-scheduled">
+              <option value="not-scheduled">Not scheduled</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="in-progress">In progress</option>
+              <option value="complete">Complete</option>
+            </select>
+          </label>
+          <label>
+            <span className="text-label">Notes</span>
+            <textarea name="notes" placeholder="Optional notes…" />
+          </label>
+          <div className="drawer-actions">
+            <button className="button ghost" type="button" onClick={onClose} disabled={isSaving}>Cancel</button>
+            <button className="button primary" type="submit" disabled={isSaving}>
+              {isSaving ? <Loader2 className="spin" size={16} aria-hidden="true" /> : null}
+              {isSaving ? "Saving…" : "Add Work Order"}
+            </button>
+          </div>
+        </form>
+      </aside>
+    </div>
   );
 }
 

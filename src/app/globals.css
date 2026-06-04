@@ -2423,3 +2423,251 @@ textarea,
 .pres-group-label:first-child {
   margin-top: var(--space-group);
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   PRODUCTION VIEW
+   ══════════════════════════════════════════════════════════════════ */
+
+.production-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-group);
+}
+
+.production-card {
+  padding: var(--space-card);
+}
+
+/* Status badges */
+.prod-status {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.prod-status-pending   { background: var(--amber-soft);  color: var(--amber); }
+.prod-status-ordered   { background: var(--blue-soft);   color: var(--blue); }
+.prod-status-transit   { background: #eff6ff;            color: #1d4ed8; }
+.prod-status-delivered { background: var(--green-soft);  color: var(--green); }
+.prod-status-cancelled { background: var(--red-soft);    color: var(--red); }
+
+/* Material orders table */
+.prod-table-wrap {
+  overflow-x: auto;
+  margin: 0 calc(-1 * var(--space-card));
+}
+
+.prod-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.prod-table th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.prod-table th:first-child { padding-left: var(--space-card); }
+.prod-table th:last-child  { padding-right: var(--space-card); }
+
+.prod-th-num { text-align: right; }
+
+.prod-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.prod-table td:first-child { padding-left: var(--space-card); }
+.prod-table td:last-child  { padding-right: var(--space-card); }
+
+.prod-table tbody tr:last-child td { border-bottom: none; }
+
+.prod-td-item   { font-weight: 500; color: var(--ink); }
+.prod-td-num    { text-align: right; color: var(--ink); }
+.prod-td-muted  { color: var(--muted); }
+.prod-td-total  { font-weight: 600; }
+
+.prod-total-row td {
+  padding: 10px 12px;
+  border-top: 1px solid var(--line-strong);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--panel-soft);
+}
+
+.prod-total-row td:first-child { padding-left: var(--space-card); border-radius: 0 0 0 var(--radius); }
+.prod-total-row td:last-child  { padding-right: var(--space-card); border-radius: 0 0 var(--radius) 0; }
+
+.prod-note {
+  margin-top: 10px;
+  font-size: 12px;
+  padding: 0 var(--space-card);
+}
+
+/* Empty state */
+.prod-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+/* Work orders list */
+.work-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.work-order-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.work-order-row:last-child { border-bottom: none; }
+
+.work-order-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.work-order-type {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.work-order-notes {
+  font-size: 12px;
+}
+
+.work-order-meta {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+
+/* ── Description Card ──────────────────────────────────────────── */
+.description-card .panel-head {
+  margin-bottom: 8px;
+}
+
+.description-preview {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: text;
+  transition: border-color 160ms ease, background 160ms ease;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.description-preview:hover {
+  border-color: rgba(249, 115, 22, 0.4);
+  background: var(--orange-soft);
+}
+
+.description-text {
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+.description-textarea {
+  width: 100%;
+  border: 1px solid var(--orange);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+  outline: none;
+}
+
+/* ── Tags Card ──────────────────────────────────────────────────── */
+.tags-card {
+  padding-bottom: 10px;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+}
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 8px 3px 10px;
+  border-radius: 999px;
+  background: var(--panel-soft);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+}
+
+.tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  padding: 0;
+  border-radius: 999px;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.tag-remove:hover {
+  color: var(--red);
+  background: var(--red-soft);
+}
+
+.tag-input {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--orange);
+  border-radius: 999px;
+  font-size: 12px;
+  background: var(--panel);
+  color: var(--ink);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+  width: 100px;
+}
