@@ -963,43 +963,34 @@ function AiRecommendations({ onAction }: { onAction: (action: AiAction) => void 
 }
 
 /* ── Contact Block ─────────────────────────────────────────────── */
-function ContactBlock({ contact, label }: { contact: Contact; label: string }) {
+function ContactBlock({ contact }: { contact: Contact }) {
   return (
     <article className="contact-block">
       <div className="contact-block-head">
-        <div>
-          <span className="text-label">{label}</span>
-          <h3 className="contact-name">
-            {contact.firstName} {contact.lastName}
-          </h3>
-          <p className="text-secondary">{contact.relationship}</p>
+        <div className="contact-block-info">
+          <div className="contact-block-name-row">
+            <span className="contact-name">{contact.firstName} {contact.lastName}</span>
+            {contact.isPrimary && <span className="contact-primary-badge">Primary</span>}
+          </div>
+          <p className="contact-meta-line">
+            <span className="text-secondary">{contact.relationship}</span>
+            {contact.lastInteraction && (
+              <span className="text-secondary"> · {contact.lastInteraction}</span>
+            )}
+          </p>
         </div>
         <div className="contact-actions">
           <button type="button" className="icon-button small" aria-label={`Call ${contact.firstName}`} title="Call">
-            <Phone size={15} />
+            <Phone size={14} />
           </button>
           <button type="button" className="icon-button small" aria-label={`Email ${contact.firstName}`} title="Email">
-            <Mail size={15} />
+            <Mail size={14} />
           </button>
           <button type="button" className="icon-button small" aria-label={`Message ${contact.firstName}`} title="Message">
-            <MessageSquare size={15} />
+            <MessageSquare size={14} />
           </button>
         </div>
       </div>
-      <ul className="contact-insights">
-        <li>
-          <span className="text-meta">Preferred</span>
-          <span>{contact.preferred}</span>
-        </li>
-        <li>
-          <span className="text-meta">Last reply</span>
-          <span>{contact.lastInteraction ?? "—"}</span>
-        </li>
-        <li>
-          <span className="text-meta">Response rate</span>
-          <span>{contact.responseRate ?? "—"}</span>
-        </li>
-      </ul>
     </article>
   );
 }
@@ -1012,23 +1003,41 @@ function ContactsCard({
   contacts: Contact[];
   openDrawer: () => void;
 }) {
+  const [open, setOpen] = useState(true);
+  const total = contacts.length + 1;
+
   return (
     <section className="surface side-card contacts-card flow-order-7">
       <div className="panel-head">
-        <h2 className="section-title">Contacts</h2>
+        <button
+          type="button"
+          className="collapsible-header-btn"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+        >
+          <div className="panel-title-group">
+            <h2 className="section-title">Contacts</h2>
+            <span className="count-pill">{total}</span>
+          </div>
+          <ChevronDown
+            size={15}
+            className="collapse-chevron"
+            style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }}
+          />
+        </button>
         <button className="text-link" type="button" onClick={openDrawer}>
           <Plus size={14} aria-hidden="true" />
-          Add another contact
+          Add
         </button>
       </div>
-      <ContactBlock contact={primaryContact} label="Primary contact" />
-      {contacts.map((contact) => (
-        <ContactBlock
-          key={`${contact.email}-${contact.phone}`}
-          contact={contact}
-          label="Secondary contact"
-        />
-      ))}
+      {open && (
+        <div className="contacts-body">
+          <ContactBlock contact={primaryContact} />
+          {contacts.map((contact) => (
+            <ContactBlock key={`${contact.email}-${contact.phone}`} contact={contact} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -1204,46 +1213,50 @@ function JobDetailsFields() {
 
 /* ── Description Card ─────────────────────────────────────────── */
 function DescriptionCard() {
+  const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState("");
 
   return (
     <section className="surface side-card description-card flow-order-10">
       <div className="panel-head">
-        <h2 className="section-title">Description</h2>
-        {!editing && value && (
-          <button
-            className="icon-button"
-            type="button"
-            onClick={() => setEditing(true)}
-            aria-label="Edit description"
-          >
+        <button
+          type="button"
+          className="collapsible-header-btn"
+          onClick={() => { if (!editing) setOpen((v) => !v); }}
+          aria-expanded={open}
+        >
+          <h2 className="section-title">Description</h2>
+          <ChevronDown
+            size={15}
+            className="collapse-chevron"
+            style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }}
+          />
+        </button>
+        {open && !editing && value && (
+          <button className="icon-button" type="button" onClick={() => setEditing(true)} aria-label="Edit description">
             <Pencil size={14} />
           </button>
         )}
       </div>
-      {editing ? (
-        <textarea
-          className="description-textarea"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onBlur={() => setEditing(false)}
-          autoFocus
-          placeholder="Add a description…"
-          rows={3}
-        />
-      ) : (
-        <button
-          type="button"
-          className="description-preview"
-          onClick={() => setEditing(true)}
-        >
-          {value ? (
-            <span className="description-text">{value}</span>
-          ) : (
-            <span className="text-secondary">Add a description…</span>
-          )}
-        </button>
+      {open && (
+        editing ? (
+          <textarea
+            className="description-textarea"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={() => setEditing(false)}
+            autoFocus
+            placeholder="Add a description…"
+            rows={3}
+          />
+        ) : (
+          <button type="button" className="description-preview" onClick={() => setEditing(true)}>
+            {value
+              ? <span className="description-text">{value}</span>
+              : <span className="text-secondary">Add a description…</span>}
+          </button>
+        )
       )}
     </section>
   );
@@ -1251,6 +1264,7 @@ function DescriptionCard() {
 
 /* ── Tags Card ─────────────────────────────────────────────────── */
 function TagsCard() {
+  const [open, setOpen] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
   const [adding, setAdding] = useState(false);
   const [newTag, setNewTag] = useState("");
@@ -1269,47 +1283,59 @@ function TagsCard() {
   return (
     <section className="surface side-card tags-card flow-order-11">
       <div className="panel-head">
-        <h2 className="section-title">
-          <Tag size={14} aria-hidden="true" />
-          Tags
-        </h2>
-        <button className="text-link" type="button" onClick={() => setAdding(true)}>
+        <button
+          type="button"
+          className="collapsible-header-btn"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+        >
+          <div className="panel-title-group">
+            <h2 className="section-title">
+              <Tag size={14} aria-hidden="true" />
+              Tags
+            </h2>
+            {tags.length > 0 && <span className="count-pill">{tags.length}</span>}
+          </div>
+          <ChevronDown
+            size={15}
+            className="collapse-chevron"
+            style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }}
+          />
+        </button>
+        <button className="text-link" type="button" onClick={(e) => { e.stopPropagation(); setOpen(true); setAdding(true); }}>
           <Plus size={14} aria-hidden="true" />
           Add tag
         </button>
       </div>
-      <div className="tags-list">
-        {tags.map((tag) => (
-          <span key={tag} className="tag-pill">
-            {tag}
-            <button
-              type="button"
-              className="tag-remove"
-              onClick={() => removeTag(tag)}
-              aria-label={`Remove ${tag}`}
-            >
-              <X size={10} />
-            </button>
-          </span>
-        ))}
-        {adding && (
-          <input
-            className="tag-input"
-            value={newTag}
-            onChange={(e) => setNewTag(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") { e.preventDefault(); commitTag(); }
-              if (e.key === "Escape") { setAdding(false); setNewTag(""); }
-            }}
-            onBlur={commitTag}
-            autoFocus
-            placeholder="Tag name…"
-          />
-        )}
-        {!tags.length && !adding && (
-          <span className="text-secondary" style={{ fontSize: "12px" }}>None added</span>
-        )}
-      </div>
+      {open && (
+        <div className="tags-list">
+          {tags.map((tag) => (
+            <span key={tag} className="tag-pill">
+              {tag}
+              <button type="button" className="tag-remove" onClick={() => removeTag(tag)} aria-label={`Remove ${tag}`}>
+                <X size={10} />
+              </button>
+            </span>
+          ))}
+          {adding && (
+            <input
+              className="tag-input"
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { e.preventDefault(); commitTag(); }
+                if (e.key === "Escape") { setAdding(false); setNewTag(""); }
+              }}
+              onBlur={commitTag}
+              autoFocus
+              placeholder="Tag name…"
+            />
+          )}
+          {!tags.length && !adding && (
+            <span className="text-secondary" style={{ fontSize: "12px" }}>None added</span>
+          )}
+        </div>
+      )}
     </section>
   );
 }
