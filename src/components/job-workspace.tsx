@@ -922,40 +922,29 @@ function ProgressCard() {
 function AiRecommendations({ onAction }: { onAction: (action: AiAction) => void }) {
   return (
     <section className="surface side-card ai-card flow-order-3">
-      <div className="panel-head">
-        <h2 className="section-title">
-          <Sparkles size={16} aria-hidden="true" />
-          AI Insight
-        </h2>
-      </div>
+      <h2 className="section-title ai-card-title">
+        <Sparkles size={15} aria-hidden="true" />
+        AI Insight
+      </h2>
 
-      {/* Narrative summary */}
-      <p className="ai-summary">
-        Engagement is <strong>warm</strong> with clear buying signals. Hannah has opened the estimate email 3× and replied within the hour. Momentum is strong — sending the proposal now significantly increases close probability.
+      <p className="ai-narrative">
+        Engagement is <strong>warm</strong> with clear buying signals. Hannah opened the
+        estimate 3× and replied within the hour — momentum is strong.
       </p>
 
-      {/* Recommended next step */}
-      <div className="ai-primary">
-        <div className="ai-primary-left">
-          <span className="ai-primary-eyebrow">
-            <Zap size={12} aria-hidden="true" />
+      <div className="ai-next-step">
+        <div className="ai-next-step-header">
+          <span className="ai-eyebrow">
+            <Zap size={11} aria-hidden="true" />
             Recommended next step
           </span>
-          <strong className="ai-primary-title">Proposal is ready to send.</strong>
-          <p className="text-secondary ai-primary-body">Email opened 3× · high intent.</p>
+          <button type="button" className="text-link ai-cta-link" onClick={() => onAction("proposal")}>
+            <Plus size={13} aria-hidden="true" />
+            Create Proposal
+          </button>
         </div>
-      </div>
-
-      {/* Contextual data */}
-      <div className="ai-insight">
-        <div className="ai-insight-row">
-          <span className="text-secondary">Best follow-up window</span>
-          <strong className="ai-insight-value">2 PM – 5 PM</strong>
-        </div>
-        <div className="ai-insight-row">
-          <span className="text-secondary">Close probability</span>
-          <strong className="ai-insight-value">84%</strong>
-        </div>
+        <p className="ai-step-title">Proposal is ready to send.</p>
+        <p className="ai-step-body">Email opened 3× · high intent · <strong>Best window 2–5 PM</strong></p>
       </div>
     </section>
   );
