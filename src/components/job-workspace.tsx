@@ -73,9 +73,9 @@ export function JobWorkspace() {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>(initialWorkOrders);
   const [activeTab, setActiveTab] = useState<ContentTab>("overview");
   const [tasks, setTasks] = useState<TaskItem[]>([
-    { id: 1, title: "Review estimate with Hannah", priority: "high", dueDate: "Jun 5, 2026", tags: ["estimate", "homeowner"] },
-    { id: 2, title: "Confirm material selections", priority: "medium", dueDate: "Jun 6, 2026", tags: ["materials"] },
-    { id: 3, title: "Send proposal once approved", priority: "medium", tags: ["proposal"] }
+    { id: 1, title: "Review estimate with Hannah", priority: "high", dueDate: "Jun 5, 2026", tags: ["Estimate", "Homeowner"] },
+    { id: 2, title: "Confirm material selections", priority: "medium", dueDate: "Jun 6, 2026", tags: ["Materials"] },
+    { id: 3, title: "Send proposal once approved", priority: "medium", tags: ["Proposal"] }
   ]);
 
   const selected = actionConfig[selectedMode] as {
@@ -1087,13 +1087,13 @@ function TasksCard({
         {tasks.length ? (
           tasks.map((task) => (
             <label className="task-row" key={task.id}>
-              <input
-                type="checkbox"
-                onChange={() => completeTask(task.id, task.title)}
-                aria-label={`Complete ${task.title}`}
-              />
               <div className="task-body">
                 <div className="task-title-row">
+                  <input
+                    type="checkbox"
+                    onChange={() => completeTask(task.id, task.title)}
+                    aria-label={`Complete ${task.title}`}
+                  />
                   <span className="task-title">{task.title}</span>
                   {task.priority && (
                     <span className={`task-priority task-priority-${task.priority}`}>
@@ -1101,12 +1101,14 @@ function TasksCard({
                     </span>
                   )}
                 </div>
-                <div className="task-meta-row">
-                  {task.dueDate && <span className="task-due">{task.dueDate}</span>}
-                  {task.tags?.map((tag) => (
-                    <span key={tag} className="task-tag">{tag}</span>
-                  ))}
-                </div>
+                {(task.dueDate || task.tags?.length) ? (
+                  <div className="task-meta-row">
+                    {task.dueDate && <span className="task-due">{task.dueDate}</span>}
+                    {task.tags?.map((tag) => (
+                      <span key={tag} className="task-tag">{tag}</span>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </label>
           ))
