@@ -455,9 +455,11 @@ function JobHero({ onCreateProposal, labels = [] }: { onCreateProposal: () => vo
                 <div className="step-label">
                   <span className="step-name">{stage.label}</span>
                   {stage.dateLabel && <time className="step-date">{stage.dateLabel}</time>}
-                  {stage.statusLabel && <span className="step-badge">{stage.statusLabel}</span>}
-                  {stage.status === "current" && (
-                    <span className="step-days-in">12 days</span>
+                  {(stage.statusLabel || stage.status === "current") && (
+                    <div className="step-badge-row">
+                      {stage.statusLabel && <span className="step-badge">{stage.statusLabel}</span>}
+                      {stage.status === "current" && <span className="step-days-in">12d</span>}
+                    </div>
                   )}
                 </div>
               </li>
@@ -614,13 +616,14 @@ function DocumentsView() {
 function ProposalsView({ onCreateProposal }: { onCreateProposal: () => void }) {
   return (
     <div className="tab-content-inner">
-      <div className="tab-section-head">
-        <h2 className="section-title">Proposals</h2>
-        <button type="button" className="button primary compact" onClick={onCreateProposal}>
-          <FileCheck2 size={14} />
-          New Proposal
-        </button>
-      </div>
+      <section className="surface tab-card">
+        <div className="panel-head">
+          <h2 className="section-title">Proposals</h2>
+          <button type="button" className="text-link" onClick={onCreateProposal}>
+            <Plus size={13} aria-hidden="true" />
+            New Proposal
+          </button>
+        </div>
       <div className="proposals-list">
         <div className="proposal-card proposal-primary">
           <div>
@@ -684,6 +687,7 @@ function ProposalsView({ onCreateProposal }: { onCreateProposal: () => void }) {
           </div>
         </div>
       </div>
+      </section>
     </div>
   );
 }
@@ -1872,8 +1876,8 @@ function InvoicesView() {
       <section className="surface invoices-card">
         <div className="panel-head">
           <h2 className="section-title">Invoices</h2>
-          <button className="button ghost compact" type="button">
-            <Plus size={14} aria-hidden="true" />
+          <button className="text-link" type="button">
+            <Plus size={13} aria-hidden="true" />
             Create Invoice
           </button>
         </div>
