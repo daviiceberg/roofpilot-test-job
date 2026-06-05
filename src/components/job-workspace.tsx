@@ -384,7 +384,7 @@ function JobHero({ onCreateProposal, labels = [] }: { onCreateProposal: () => vo
               450 Merci Blvd · Dripping Springs, TX 78620
             </p>
             <div className="hero-badges">
-              <span className="stage-chip">Appointment Scheduled</span>
+              <span className="stage-chip">Appointment Scheduled · Jun 10</span>
               <span className="engagement-badge warm">
                 <span className="engagement-dot" />
                 Warm lead
@@ -455,6 +455,9 @@ function JobHero({ onCreateProposal, labels = [] }: { onCreateProposal: () => vo
                   <span className="step-name">{stage.label}</span>
                   {stage.dateLabel && <time className="step-date">{stage.dateLabel}</time>}
                   {stage.statusLabel && <span className="step-badge">{stage.statusLabel}</span>}
+                  {stage.status === "current" && (
+                    <span className="step-days-in">12 days</span>
+                  )}
                 </div>
               </li>
             );
@@ -533,14 +536,47 @@ const mockDocuments: DocItem[] = [
   { id: 5, icon: "xls", name: "Adjuster Scope of Work.xlsx", size: "310 KB", date: "Jun 1, 2026", status: "pending", statusLabel: "In review" }
 ];
 
+const mockPhotos = [
+  { id: 1, label: "North face — hail damage",  date: "Jun 2, 2026", color: "#e2e8f0" },
+  { id: 2, label: "South ridge — cracked shingle", date: "Jun 2, 2026", color: "#cbd5e1" },
+  { id: 3, label: "Gutter damage — east side",   date: "Jun 2, 2026", color: "#94a3b8" },
+  { id: 4, label: "Skylight flashing",           date: "Jun 2, 2026", color: "#64748b" },
+  { id: 5, label: "Overall roof — aerial",       date: "Jun 2, 2026", color: "#475569" },
+  { id: 6, label: "Interior water damage",       date: "Jun 3, 2026", color: "#334155" },
+];
+
 function DocumentsView() {
   return (
     <div className="tab-content-inner">
+      {/* Damage photos */}
       <div className="tab-section-head">
-        <h2 className="section-title">Documents</h2>
-        <button type="button" className="button ghost compact">
+        <h2 className="section-title">
+          <Image size={15} aria-hidden="true" />
+          Damage Photos
+        </h2>
+        <span className="count-pill">{mockPhotos.length}</span>
+        <button type="button" className="button ghost compact" style={{ marginLeft: "auto" }}>
           <Plus size={14} />
-          Upload Document
+          Add photos
+        </button>
+      </div>
+      <div className="photo-grid">
+        {mockPhotos.map((photo) => (
+          <button key={photo.id} type="button" className="photo-thumb" aria-label={photo.label}>
+            <div className="photo-placeholder" style={{ background: photo.color }} aria-hidden="true">
+              <Image size={20} />
+            </div>
+            <span className="photo-label">{photo.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Documents */}
+      <div className="tab-section-head" style={{ marginTop: 24 }}>
+        <h2 className="section-title">Documents</h2>
+        <button type="button" className="button ghost compact" style={{ marginLeft: "auto" }}>
+          <Plus size={14} />
+          Upload
         </button>
       </div>
       <div className="doc-grid">
@@ -988,6 +1024,9 @@ function ContactBlock({ contact }: { contact: Contact }) {
           <button type="button" className="icon-button small" aria-label={`Message ${contact.firstName}`} title="Message">
             <MessageSquare size={14} />
           </button>
+          <button type="button" className="icon-button small" aria-label={`View history for ${contact.firstName}`} title="View history">
+            <FileText size={14} />
+          </button>
         </div>
       </div>
     </article>
@@ -1108,38 +1147,79 @@ function TasksCard({
 }
 
 /* ── Insurance Fields ──────────────────────────────────────────── */
+const claimSteps = [
+  { id: "filed",     label: "Filed" },
+  { id: "adjuster",  label: "Adjuster" },
+  { id: "acv",       label: "ACV" },
+  { id: "supplement",label: "Supplement" },
+  { id: "rcv",       label: "RCV" },
+] as const;
+type ClaimStep = typeof claimSteps[number]["id"];
+
+const supplementStatuses = ["Identified", "Filed", "Approved", "Denied"] as const;
+type SupplementStatus = typeof supplementStatuses[number];
+
 function InsuranceFields() {
+  const [claimStatus, setClaimStatus] = useState<ClaimStep>("adjuster");
+  const [supplementStatus, setSupplementStatus] = useState<SupplementStatus>("Filed");
+
+  const currentIdx = claimSteps.findIndex((s) => s.id === claimStatus);
+
   return (
-    <dl className="field-list metadata-fields">
-      <div>
-        <dt className="text-label">Carrier</dt>
-        <dd>State Farm</dd>
+    <div className="insurance-fields">
+      {/* Claim progress pipeline */}
+      <div className="claim-pipeline">
+        <span className="text-label" style={{ marginBottom: 8, display: "block" }}>Claim status</span>
+        <ol className="claim-steps">
+          {claimSteps.map((step, i) => {
+            const done = i < currentIdx;
+            const current = i === currentIdx;
+            return (
+              <li key={step.id} className={`claim-step${done ? " done" : current ? " current" : ""}`}>
+                <button
+                  type="button"
+                  className="claim-step-dot"
+                  onClick={() => setClaimStatus(step.id)}
+                  title={`Mark as ${step.label}`}
+                  aria-label={`Set claim to ${step.label}`}
+                >
+                  {done && <Check size={8} strokeWidth={3} />}
+                </button>
+                <span className="claim-step-label">{step.label}</span>
+              </li>
+            );
+          })}
+        </ol>
       </div>
-      <div>
-        <dt className="text-label">Claim number</dt>
-        <dd className="text-meta-value">CLM-582741</dd>
+
+      {/* Supplement */}
+      <div className="insurance-supplement-row">
+        <span className="text-label">Supplement</span>
+        <div className="supplement-status-group">
+          {supplementStatuses.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className={`supplement-btn${supplementStatus === s ? " active" : ""}`}
+              onClick={() => setSupplementStatus(s)}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
       </div>
-      <div>
-        <dt className="text-label">Policy number</dt>
-        <dd className="text-meta-value">SF-4471-2026</dd>
-      </div>
-      <div>
-        <dt className="text-label">Deductible</dt>
-        <dd>$1,500</dd>
-      </div>
-      <div>
-        <dt className="text-label">Date of loss</dt>
-        <dd>May 22, 2026</dd>
-      </div>
-      <div>
-        <dt className="text-label">Adjuster</dt>
-        <dd>John Carter</dd>
-      </div>
-      <div>
-        <dt className="text-label">Inspection date</dt>
-        <dd>Jun 2, 2026</dd>
-      </div>
-    </dl>
+
+      {/* Fields */}
+      <dl className="field-list metadata-fields insurance-meta">
+        <div><dt className="text-label">Carrier</dt><dd>State Farm</dd></div>
+        <div><dt className="text-label">Claim number</dt><dd className="text-meta-value">CLM-582741</dd></div>
+        <div><dt className="text-label">Policy number</dt><dd className="text-meta-value">SF-4471-2026</dd></div>
+        <div><dt className="text-label">Deductible</dt><dd>$1,500</dd></div>
+        <div><dt className="text-label">Date of loss</dt><dd>May 22, 2026</dd></div>
+        <div><dt className="text-label">Adjuster</dt><dd>John Carter</dd></div>
+        <div><dt className="text-label">Inspection date</dt><dd>Jun 2, 2026</dd></div>
+      </dl>
+    </div>
   );
 }
 

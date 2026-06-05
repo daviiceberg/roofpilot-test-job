@@ -1648,6 +1648,24 @@ textarea,
   }
 }
 
+/* At 1380px: hide photo and tighten metrics to keep hero in one row */
+@media (max-width: 1380px) {
+  .property-photo-btn {
+    display: none;
+  }
+
+  .hero-metric {
+    padding: 0 14px;
+  }
+
+  .hero-address {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 320px;
+  }
+}
+
 @media (max-width: 1180px) {
   .job-hero-row {
     flex-wrap: wrap;
@@ -1976,6 +1994,201 @@ textarea,
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.01em;
+}
+
+.step-days-in {
+  font-size: 10px;
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+/* ── Claim pipeline ────────────────────────────────────────────── */
+.insurance-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.claim-pipeline {
+  padding: 12px 14px;
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.claim-steps {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+.claim-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  gap: 5px;
+}
+
+.claim-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: calc(50% + 8px);
+  right: calc(-50% + 8px);
+  height: 2px;
+  background: var(--line-strong);
+}
+
+.claim-step.done:not(:last-child)::after,
+.claim-step.current:not(:last-child)::after {
+  background: var(--green);
+}
+
+.claim-step-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--line-strong);
+  background: var(--panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+  position: relative;
+  z-index: 1;
+}
+
+.claim-step.done .claim-step-dot {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.claim-step.current .claim-step-dot {
+  border-color: var(--orange);
+  background: var(--orange-soft);
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
+}
+
+.claim-step-dot:hover {
+  border-color: var(--orange);
+}
+
+.claim-step-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.claim-step.done .claim-step-label,
+.claim-step.current .claim-step-label {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ── Supplement status ─────────────────────────────────────────── */
+.insurance-supplement-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.supplement-status-group {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.supplement-btn {
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel-soft);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.supplement-btn:hover {
+  border-color: var(--orange);
+  color: var(--orange-strong);
+}
+
+.supplement-btn.active {
+  background: var(--orange-soft);
+  border-color: rgba(249,115,22,0.35);
+  color: var(--orange-strong);
+  font-weight: 600;
+}
+
+.supplement-btn.active[data-status="Approved"] {
+  background: var(--green-soft);
+  border-color: rgba(22,163,74,0.3);
+  color: var(--green);
+}
+
+.supplement-btn.active[data-status="Denied"] {
+  background: var(--red-soft);
+  border-color: rgba(220,38,38,0.3);
+  color: var(--red);
+}
+
+.insurance-meta {
+  margin-top: 2px;
+}
+
+/* ── Damage photos grid ────────────────────────────────────────── */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.photo-thumb {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.photo-placeholder {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.5);
+  transition: opacity 160ms ease;
+}
+
+.photo-thumb:hover .photo-placeholder {
+  opacity: 0.85;
+}
+
+.photo-label {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 /* ── Content Tab Bar ───────────────────────────────────────────── */
