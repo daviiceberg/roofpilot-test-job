@@ -339,6 +339,31 @@ p {
   color: var(--muted);
 }
 
+.pager-kbd-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-right: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.pager-kbd-hint kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--panel-soft);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 .pager-btn {
   display: inline-flex;
   width: 30px;
@@ -2640,29 +2665,55 @@ textarea,
 
 /* ── Description Card ──────────────────────────────────────────── */
 
-.description-preview {
-  display: block;
-  width: 100%;
-  text-align: left;
+.description-empty-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: none;
-  border: none;
+  border: 1px dashed var(--line-strong);
   border-radius: 8px;
-  padding: 4px 0;
-  cursor: text;
-  transition: color 160ms ease;
+  padding: 8px 12px;
+  width: 100%;
+  cursor: pointer;
   font-size: 13px;
-  line-height: 1.5;
-  color: var(--ink);
+  color: var(--muted);
+  transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
 }
 
-.description-preview:hover {
+.description-empty-trigger:hover {
+  border-color: var(--orange);
   color: var(--orange-strong);
+  background: var(--orange-soft);
 }
 
+.description-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.description-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.description-saved {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 .description-text {
+  font-size: 13px;
+  line-height: 1.6;
   color: var(--ink);
   white-space: pre-wrap;
+}
+
+.description-edit-btn {
+  align-self: flex-start;
+  font-size: 12px;
 }
 
 .description-textarea {
@@ -2834,6 +2885,118 @@ textarea,
 }
 
 /* ── Financial Summary ──────────────────────────────────────────── */
+/* ── Job Info Card ──────────────────────────────────────────────── */
+.job-info-card {
+  padding: var(--space-card);
+  transition: box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.job-info-timestamps {
+  flex: 1;
+  font-size: 11px;
+  color: var(--muted);
+  padding-left: 10px;
+}
+
+.job-info-editing {
+  border-color: rgba(249,115,22,0.35);
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.08), var(--shadow-sm);
+}
+
+/* View mode — tiles */
+.job-info-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.job-info-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-width: 0;
+}
+
+.job-info-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+}
+
+.job-info-tile-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.job-info-tile-data {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.job-info-desc-view {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+/* Edit mode */
+.job-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  margin-bottom: 12px;
+}
+
+.job-info-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.job-info-input {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--panel-soft);
+  font-size: 13px;
+  color: var(--ink);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.job-info-input:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.12);
+  outline: none;
+  background: var(--panel);
+}
+
+.job-info-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+/* ── Financial Summary ──────────────────────────────────────────── */
 .fin-summary {
   padding: var(--space-card);
 }
@@ -2915,53 +3078,90 @@ textarea,
   padding: var(--space-card);
 }
 
-.measurements-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.measurement-row {
+.meas-tiles {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  padding: 14px 14px;
-  background: var(--panel-soft);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
-.measurement-col {
+.meas-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.meas-tile-note {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.meas-notes-list {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 1px;
 }
 
-.measurement-col:empty {
-  display: none;
+.meas-note-item {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
 }
 
-.measurement-value {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--ink);
-  line-height: 1.3;
+.meas-note-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
-.measurement-note {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 2px;
+.meas-note-item:first-child {
+  padding-top: 0;
 }
 
-.measurements-notes {
+.meas-note-text {
   font-size: 13px;
-  line-height: 1.6;
-  color: var(--muted);
-  padding: 12px 14px;
-  background: var(--panel-soft);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  line-height: 1.5;
+  color: var(--ink);
+  margin-bottom: 1px;
+}
+
+.meas-note-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.meas-note-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.meas-note-item:hover .meas-note-actions {
+  opacity: 1;
+}
+
+.meas-note-delete:hover {
+  color: var(--red);
+  background: var(--red-soft);
+}
+
+.meas-note-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meas-note-new {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 /* ── Invoices view ──────────────────────────────────────────────── */

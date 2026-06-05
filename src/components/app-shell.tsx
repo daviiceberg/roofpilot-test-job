@@ -25,7 +25,13 @@ const navItems = [
   { id: "reports", label: "Reports", icon: BarChart3, active: false }
 ] as const;
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, jobIndex = 1, jobTotal = 11, onPrev, onNext }: {
+  children: ReactNode;
+  jobIndex?: number;
+  jobTotal?: number;
+  onPrev?: () => void;
+  onNext?: () => void;
+}) {
   return (
     <div className="app-root">
       <nav className="icon-rail" aria-label="Main navigation">
@@ -87,11 +93,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             <strong>Job Details</strong>
           </div>
           <div className="job-pager" aria-label="Navigate jobs">
-            <button type="button" className="pager-btn" aria-label="Previous job">
+            <span className="pager-kbd-hint" aria-hidden="true">
+              <kbd>←</kbd><kbd>→</kbd> to navigate
+            </span>
+            <button type="button" className="pager-btn" aria-label="Previous job" onClick={onPrev} disabled={jobIndex <= 1}>
               <ChevronLeft size={18} />
             </button>
-            <span>1 / 11</span>
-            <button type="button" className="pager-btn" aria-label="Next job">
+            <span>{jobIndex} / {jobTotal}</span>
+            <button type="button" className="pager-btn" aria-label="Next job" onClick={onNext} disabled={jobIndex >= jobTotal}>
               <ChevronRight size={18} />
             </button>
           </div>

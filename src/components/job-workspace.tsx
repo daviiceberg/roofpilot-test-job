@@ -29,10 +29,12 @@ import {
 } from "@/lib/job-data";
 import {
   AlertTriangle,
+  CalendarDays,
   Check,
   ChevronDown,
   CircleDollarSign,
   FileCheck2,
+  Ruler,
   FileText,
   FilePlus2,
   Flame,
@@ -50,11 +52,12 @@ import {
   ShieldCheck,
   Sparkles,
   Tag,
+  UserCircle,
   UserPlus,
   X,
   Zap
 } from "lucide-react";
-import { FormEvent, useMemo, useState, type ReactNode } from "react";
+import { FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
 
 type ContentTab = "overview" | "activity" | "measurements" | "proposals" | "documents" | "invoices" | "production";
 
@@ -71,8 +74,21 @@ export function JobWorkspace() {
   const [contacts, setContacts] = useState<Contact[]>([defaultSecondaryContact]);
   const [materialOrders, setMaterialOrders] = useState<MaterialOrder[]>(initialMaterialOrders);
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>(initialWorkOrders);
-  const [jobLabels] = useState<string[]>(["Supplement Required", "Garage"]);
+  const [jobLabels] = useState<string[]>(["Garage"]);
   const [activeTab, setActiveTab] = useState<ContentTab>("overview");
+  const [jobIndex, setJobIndex] = useState(1);
+  const jobTotal = 11;
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === "ArrowLeft")  setJobIndex((i) => Math.max(1, i - 1));
+      if (e.key === "ArrowRight") setJobIndex((i) => Math.min(jobTotal, i + 1));
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
   const [tasks, setTasks] = useState<TaskItem[]>([
     { id: 1, title: "Review estimate with Hannah", priority: "high", dueDate: "Jun 5, 2026", tags: ["Estimate", "Homeowner"] },
     { id: 2, title: "Confirm material selections", priority: "medium", dueDate: "Jun 6, 2026", tags: ["Materials"] },
@@ -172,7 +188,12 @@ export function JobWorkspace() {
   }
 
   return (
-    <AppShell>
+    <AppShell
+      jobIndex={jobIndex}
+      jobTotal={jobTotal}
+      onPrev={() => setJobIndex((i) => Math.max(1, i - 1))}
+      onNext={() => setJobIndex((i) => Math.min(jobTotal, i + 1))}
+    >
       <main className="workspace">
         {errorBanner ? (
           <div className="error-banner" role="alert">
@@ -201,6 +222,7 @@ export function JobWorkspace() {
           <div className="left-rail">
             {activeTab === "overview" && (
               <>
+                <JobInfoCard />
                 <FinancialSummary />
                 <ActivityComposer
                   selectedMode={selectedMode}
@@ -208,11 +230,6 @@ export function JobWorkspace() {
                   submitComposer={submitComposer}
                   isSubmitting={isSubmitting}
                   inlineSuccess={inlineSuccess}
-                />
-                <ActivityTimeline
-                  timeline={filteredTimeline}
-                  filter={timelineFilter}
-                  onFilterChange={setTimelineFilter}
                 />
               </>
             )}
@@ -264,15 +281,6 @@ export function JobWorkspace() {
             >
               <InsuranceFields />
             </CollapsibleCard>
-            <CollapsibleCard
-              title="Job Details"
-              subtitle="Arch. Shingle · Hail damage · 2,400 sq ft"
-              className="job-details-card metadata-card flow-order-11"
-              defaultOpen={false}
-            >
-              <JobDetailsFields />
-            </CollapsibleCard>
-            <DescriptionCard />
             <TagsCard />
           </aside>
         </section>
@@ -1135,7 +1143,160 @@ function InsuranceFields() {
   );
 }
 
-/* ── Job Details Fields ────────────────────────────────────────── */
+/* ── Job Info Card (Overview left rail) ────────────────────────── */
+type JobInfoData = {
+  closeDate: string;
+  jobValue: string;
+  assignee: string;
+  source: string;
+  description: string;
+};
+
+const jobInfoDefaults: JobInfoData = {
+  closeDate: "Jun 20, 2026",
+  jobValue: "$18,450",
+  assignee: "Dana Kim",
+  source: "Referral",
+  description: "Homeowner prefers morning contact. Roof is architectural shingle with hail damage from the May storm. HOA approval required before work begins — Hannah is handling that side.",
+};
+
+function JobInfoCard() {
+  const [data, setData] = useState<JobInfoData>(jobInfoDefaults);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<JobInfoData>(jobInfoDefaults);
+
+  function startEdit() {
+    setDraft(data);
+    setEditing(true);
+  }
+
+  function handleSave() {
+    setData(draft);
+    setEditing(false);
+  }
+
+  function handleCancel() {
+    setEditing(false);
+  }
+
+  return (
+    <section className={`surface job-info-card${editing ? " job-info-editing" : ""}`}>
+      <div className="panel-head">
+        <h2 className="section-title">Job Details</h2>
+        <span className="job-info-timestamps">
+          Created May 27, 2026 · Updated today
+        </span>
+        {!editing && (
+          <button type="button" className="text-link" onClick={startEdit}>
+            <Pencil size={13} aria-hidden="true" />
+            Edit
+          </button>
+        )}
+      </div>
+
+      {editing ? (
+        <>
+          <div className="job-info-grid">
+            <label className="job-info-field">
+              <span className="text-label">Close date</span>
+              <input
+                type="text"
+                className="job-info-input"
+                value={draft.closeDate}
+                onChange={(e) => setDraft((d) => ({ ...d, closeDate: e.target.value }))}
+                placeholder="e.g. Jun 20, 2026"
+              />
+            </label>
+            <label className="job-info-field">
+              <span className="text-label">Job value</span>
+              <input
+                type="text"
+                className="job-info-input"
+                value={draft.jobValue}
+                onChange={(e) => setDraft((d) => ({ ...d, jobValue: e.target.value }))}
+                placeholder="$0.00"
+              />
+            </label>
+            <label className="job-info-field">
+              <span className="text-label">Assignee</span>
+              <select className="job-info-input" value={draft.assignee} onChange={(e) => setDraft((d) => ({ ...d, assignee: e.target.value }))}>
+                <option>Dana Kim</option>
+                <option>Marcus Lee</option>
+                <option>Sarah Chen</option>
+              </select>
+            </label>
+            <label className="job-info-field">
+              <span className="text-label">Source</span>
+              <select className="job-info-input" value={draft.source} onChange={(e) => setDraft((d) => ({ ...d, source: e.target.value }))}>
+                <option>Referral</option>
+                <option>Website form</option>
+                <option>Door-to-door</option>
+                <option>Google Ads</option>
+                <option>Insurance claim</option>
+              </select>
+            </label>
+          </div>
+          <label className="job-info-field" style={{ marginBottom: 14 }}>
+            <span className="text-label">Description</span>
+            <textarea
+              className="description-textarea"
+              style={{ marginTop: 5 }}
+              value={draft.description}
+              onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
+              placeholder="Add key details: material preferences, best time to contact, next steps…"
+              rows={3}
+              autoFocus
+            />
+          </label>
+          <div className="job-info-edit-actions">
+            <button type="button" className="button ghost compact" onClick={handleCancel}>Cancel</button>
+            <button type="button" className="button primary compact" onClick={handleSave}>Save changes</button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="job-info-tiles">
+            <div className="job-info-tile">
+              <div className="job-info-tile-head">
+                <CircleDollarSign size={13} aria-hidden="true" />
+                <span className="job-info-tile-label">Job value</span>
+              </div>
+              <span className="job-info-tile-data">{data.jobValue}</span>
+            </div>
+            <div className="job-info-tile">
+              <div className="job-info-tile-head">
+                <CalendarDays size={13} aria-hidden="true" />
+                <span className="job-info-tile-label">Close date</span>
+              </div>
+              <span className="job-info-tile-data">{data.closeDate}</span>
+            </div>
+            <div className="job-info-tile">
+              <div className="job-info-tile-head">
+                <UserCircle size={13} aria-hidden="true" />
+                <span className="job-info-tile-label">Assignee</span>
+              </div>
+              <span className="job-info-tile-data">{data.assignee}</span>
+            </div>
+            <div className="job-info-tile">
+              <div className="job-info-tile-head">
+                <Flame size={13} aria-hidden="true" />
+                <span className="job-info-tile-label">Source</span>
+              </div>
+              <span className="job-info-tile-data">{data.source}</span>
+            </div>
+          </div>
+          {data.description && (
+            <div className="job-info-desc-view">
+              <span className="text-label">Description</span>
+              <p className="description-text">{data.description}</p>
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
 function JobDetailsFields() {
   return (
     <dl className="field-list metadata-fields">
@@ -1208,6 +1369,23 @@ function DescriptionCard() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState("");
+  const [draft, setDraft] = useState("");
+
+  function startEditing() {
+    setDraft(value);
+    setEditing(true);
+    if (!open) setOpen(true);
+  }
+
+  function handleSave() {
+    setValue(draft.trim());
+    setEditing(false);
+  }
+
+  function handleCancel() {
+    setDraft("");
+    setEditing(false);
+  }
 
   return (
     <section className={`surface side-card description-card collapsible flow-order-12${open ? " open" : ""}`}>
@@ -1223,23 +1401,41 @@ function DescriptionCard() {
         <ChevronDown size={18} className="collapse-chevron" aria-hidden="true" />
       </button>
       <div className="collapse-body">
-        {open && (editing ? (
-          <textarea
-            className="description-textarea"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onBlur={() => setEditing(false)}
-            autoFocus
-            placeholder="Add a description…"
-            rows={3}
-          />
-        ) : (
-          <button type="button" className="description-preview" onClick={() => setEditing(true)}>
-            {value
-              ? <span className="description-text">{value}</span>
-              : <span className="text-secondary">Add a description…</span>}
-          </button>
-        ))}
+        {open && (
+          editing ? (
+            <div className="description-editor">
+              <textarea
+                className="description-textarea"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                autoFocus
+                placeholder="Add key details: material preferences, best time to contact, next steps…"
+                rows={4}
+              />
+              <div className="description-actions">
+                <button type="button" className="button ghost compact" onClick={handleCancel}>
+                  Cancel
+                </button>
+                <button type="button" className="button primary compact" onClick={handleSave}>
+                  Save
+                </button>
+              </div>
+            </div>
+          ) : value ? (
+            <div className="description-saved">
+              <p className="description-text">{value}</p>
+              <button type="button" className="text-link description-edit-btn" onClick={startEditing}>
+                <Pencil size={12} aria-hidden="true" />
+                Edit
+              </button>
+            </div>
+          ) : (
+            <button type="button" className="description-empty-trigger" onClick={startEditing}>
+              <Plus size={14} aria-hidden="true" />
+              Add a description
+            </button>
+          )
+        )}
       </div>
     </section>
   );
@@ -1362,103 +1558,223 @@ function CollapsibleCard({
 }
 
 /* ── Measurements View ─────────────────────────────────────────── */
+type RoofDims = {
+  totalSquares: string; pitch: string; layers: string; eaveLength: string;
+  ridgeLength: string; hipValley: string; dripEdge: string; wasteFactor: string;
+};
+
+const roofDimsDefault: RoofDims = {
+  totalSquares: "28 SQ", pitch: "6/12", layers: "1", eaveLength: "180 lf",
+  ridgeLength: "42 lf", hipValley: "68 lf", dripEdge: "220 lf", wasteFactor: "12%",
+};
+
 function MeasurementsView() {
+  const [dims, setDims] = useState<RoofDims>(roofDimsDefault);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<RoofDims>(roofDimsDefault);
+
+  function startEdit() { setDraft(dims); setEditing(true); }
+  function handleSave() { setDims(draft); setEditing(false); }
+  function handleCancel() { setEditing(false); }
+
+  const dimFields: { key: keyof RoofDims; label: string }[] = [
+    { key: "totalSquares", label: "Total squares" },
+    { key: "pitch",        label: "Pitch" },
+    { key: "layers",       label: "Layers" },
+    { key: "eaveLength",   label: "Eave length" },
+    { key: "ridgeLength",  label: "Ridge length" },
+    { key: "hipValley",    label: "Hip / Valley" },
+    { key: "dripEdge",     label: "Drip edge" },
+    { key: "wasteFactor",  label: "Waste factor" },
+  ];
+
+  const materialTiles = [
+    { label: "Shingles needed", value: "31.4 SQ", note: "incl. waste" },
+    { label: "Underlayment",    value: "10 rolls" },
+    { label: "Ice & water",     value: "2 rolls" },
+    { label: "Ridge cap",       value: "4 bundles" },
+    { label: "Drip edge",       value: "8 sticks" },
+  ];
+
   return (
     <div className="measurements-view">
-      <section className="surface measurements-card">
+      <section className={`surface measurements-card${editing ? " job-info-editing" : ""}`}>
         <div className="panel-head">
-          <h2 className="section-title">Roof Dimensions</h2>
-          <button className="button ghost compact" type="button">Edit</button>
+          <h2 className="section-title">
+            <Ruler size={15} aria-hidden="true" />
+            Roof Dimensions
+          </h2>
+          {!editing && (
+            <button type="button" className="text-link" onClick={startEdit}>
+              <Pencil size={13} aria-hidden="true" />
+              Edit
+            </button>
+          )}
         </div>
-        <div className="measurements-grid">
-          <div className="measurement-row">
-            <div className="measurement-col">
-              <span className="text-label">Total squares</span>
-              <strong className="measurement-value">28 SQ</strong>
+
+        {editing ? (
+          <>
+            <div className="meas-edit-grid">
+              {dimFields.map(({ key, label }) => (
+                <label key={key} className="job-info-field">
+                  <span className="text-label">{label}</span>
+                  <input
+                    type="text"
+                    className="job-info-input"
+                    value={draft[key]}
+                    onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))}
+                  />
+                </label>
+              ))}
             </div>
-            <div className="measurement-col">
-              <span className="text-label">Pitch</span>
-              <strong className="measurement-value">6/12</strong>
+            <div className="job-info-edit-actions">
+              <button type="button" className="button ghost compact" onClick={handleCancel}>Cancel</button>
+              <button type="button" className="button primary compact" onClick={handleSave}>Save changes</button>
             </div>
+          </>
+        ) : (
+          <div className="meas-tiles">
+            {dimFields.map(({ key, label }) => (
+              <div key={key} className="job-info-tile">
+                <div className="job-info-tile-head">
+                  <span className="job-info-tile-label">{label}</span>
+                </div>
+                <span className="job-info-tile-data">{dims[key]}</span>
+              </div>
+            ))}
           </div>
-          <div className="measurement-row">
-            <div className="measurement-col">
-              <span className="text-label">Layers</span>
-              <strong className="measurement-value">1</strong>
-            </div>
-            <div className="measurement-col">
-              <span className="text-label">Eave length</span>
-              <strong className="measurement-value">180 lf</strong>
-            </div>
-          </div>
-          <div className="measurement-row">
-            <div className="measurement-col">
-              <span className="text-label">Ridge length</span>
-              <strong className="measurement-value">42 lf</strong>
-            </div>
-            <div className="measurement-col">
-              <span className="text-label">Hip / Valley</span>
-              <strong className="measurement-value">68 lf</strong>
-            </div>
-          </div>
-          <div className="measurement-row">
-            <div className="measurement-col">
-              <span className="text-label">Drip edge</span>
-              <strong className="measurement-value">220 lf</strong>
-            </div>
-            <div className="measurement-col">
-              <span className="text-label">Waste factor</span>
-              <strong className="measurement-value">12%</strong>
-            </div>
-          </div>
-        </div>
+        )}
       </section>
 
       <section className="surface measurements-card">
         <div className="panel-head">
           <h2 className="section-title">Material Estimates</h2>
         </div>
-        <div className="measurements-grid">
-          <div className="measurement-row">
-            <div className="measurement-col">
-              <span className="text-label">Shingles needed</span>
-              <strong className="measurement-value">31.4 SQ</strong>
-              <span className="measurement-note">(incl. waste)</span>
+        <div className="meas-tiles">
+          {materialTiles.map(({ label, value, note }) => (
+            <div key={label} className="job-info-tile">
+              <div className="job-info-tile-head">
+                <span className="job-info-tile-label">{label}</span>
+              </div>
+              <span className="job-info-tile-data">
+                {value}
+                {note && <span className="meas-tile-note"> ({note})</span>}
+              </span>
             </div>
-            <div className="measurement-col">
-              <span className="text-label">Underlayment</span>
-              <strong className="measurement-value">10 rolls</strong>
-            </div>
-          </div>
-          <div className="measurement-row">
-            <div className="measurement-col">
-              <span className="text-label">Ice & water shield</span>
-              <strong className="measurement-value">2 rolls</strong>
-            </div>
-            <div className="measurement-col">
-              <span className="text-label">Ridge cap</span>
-              <strong className="measurement-value">4 bundles</strong>
-            </div>
-          </div>
-          <div className="measurement-row">
-            <div className="measurement-col">
-              <span className="text-label">Drip edge</span>
-              <strong className="measurement-value">8 sticks</strong>
-            </div>
-            <div className="measurement-col" />
-          </div>
+          ))}
         </div>
       </section>
 
-      <section className="surface measurements-card">
-        <div className="panel-head">
-          <h2 className="section-title">Notes</h2>
-        </div>
-        <p className="measurements-notes">
-          Slope confirmed during inspection — no structural damage found. Two skylights on north face require additional flashing. Gutters to be re-hung after installation.
-        </p>
-      </section>
+      <MeasurementNotes />
     </div>
+  );
+}
+
+type MeasNote = { id: number; text: string; date: string };
+
+function MeasurementNotes() {
+  const [notes, setNotes] = useState<MeasNote[]>([
+    { id: 1, text: "Slope confirmed during inspection — no structural damage found.", date: "Jun 2, 2026" },
+    { id: 2, text: "Two skylights on north face require additional flashing.", date: "Jun 2, 2026" },
+    { id: 3, text: "Gutters to be re-hung after installation.", date: "Jun 3, 2026" },
+  ]);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [newDraft, setNewDraft] = useState("");
+
+  function startEdit(note: MeasNote) {
+    setEditingId(note.id);
+    setEditDraft(note.text);
+  }
+
+  function saveEdit() {
+    if (!editDraft.trim()) return;
+    setNotes((ns) => ns.map((n) => n.id === editingId ? { ...n, text: editDraft.trim() } : n));
+    setEditingId(null);
+  }
+
+  function cancelEdit() { setEditingId(null); }
+
+  function deleteNote(id: number) {
+    setNotes((ns) => ns.filter((n) => n.id !== id));
+  }
+
+  function saveNew() {
+    if (!newDraft.trim()) return;
+    setNotes((ns) => [...ns, { id: Date.now(), text: newDraft.trim(), date: "Jun 5, 2026" }]);
+    setNewDraft("");
+    setAdding(false);
+  }
+
+  function cancelNew() { setNewDraft(""); setAdding(false); }
+
+  return (
+    <section className="surface measurements-card">
+      <div className="panel-head">
+        <h2 className="section-title">Notes</h2>
+        {!adding && (
+          <button type="button" className="text-link" onClick={() => setAdding(true)}>
+            <Plus size={13} aria-hidden="true" />
+            Add note
+          </button>
+        )}
+      </div>
+
+      <div className="meas-notes-list">
+        {notes.map((note) => (
+          <div key={note.id} className="meas-note-item">
+            {editingId === note.id ? (
+              <div className="meas-note-edit">
+                <textarea
+                  className="description-textarea"
+                  value={editDraft}
+                  onChange={(e) => setEditDraft(e.target.value)}
+                  autoFocus
+                  rows={2}
+                />
+                <div className="description-actions">
+                  <button type="button" className="button ghost compact" onClick={cancelEdit}>Cancel</button>
+                  <button type="button" className="button primary compact" onClick={saveEdit}>Save</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="meas-note-text">{note.text}</p>
+                <div className="meas-note-meta">
+                  <span className="text-meta">{note.date}</span>
+                  <div className="meas-note-actions">
+                    <button type="button" className="icon-button small" onClick={() => startEdit(note)} aria-label="Edit note" title="Edit">
+                      <Pencil size={13} />
+                    </button>
+                    <button type="button" className="icon-button small meas-note-delete" onClick={() => deleteNote(note.id)} aria-label="Delete note" title="Delete">
+                      <X size={13} />
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+
+        {adding && (
+          <div className="meas-note-item meas-note-new">
+            <textarea
+              className="description-textarea"
+              value={newDraft}
+              onChange={(e) => setNewDraft(e.target.value)}
+              autoFocus
+              rows={2}
+              placeholder="Add a note…"
+            />
+            <div className="description-actions">
+              <button type="button" className="button ghost compact" onClick={cancelNew}>Cancel</button>
+              <button type="button" className="button primary compact" onClick={saveNew}>Save</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 
