@@ -53,7 +53,7 @@ const primaryDecisions: Improvement[] = [
     before:
       "No AI assistance. The rep had to manually assess timing, priority and engagement levels before deciding on the next step.",
     after:
-      "AI Insight panel shows engagement signals, best follow-up window, potential value and close probability -- informing the decision without repeating the primary CTA.",
+      "AI Insight panel shows engagement signals, recommended next step and best follow-up window -- informing the decision without repeating the primary CTA or duplicating data already visible in the hero.",
     outcome:
       "The AI layer provides context and decision support without competing with primary actions. More useful guidance and less interface noise.",
   },
@@ -76,7 +76,7 @@ const supportingDecisions: Improvement[] = [
     before:
       "Switching to Activity, Documents or Proposals tabs hid the sidebar entirely, removing AI insights, tasks and contacts from view while working.",
     after:
-      "AI Insight, Tasks, Contacts and detail cards remain visible on all tabs. The sidebar provides continuous context regardless of the active tab.",
+      "AI Insight, Tasks and Contacts remain visible on all tabs. Job Details — including close date, value, assignee and description — live in the Overview column for immediate access.",
   },
   {
     tag: "Cards",
@@ -99,11 +99,11 @@ const supportingDecisions: Improvement[] = [
   {
     tag: "Spacing",
     color: "gray",
-    title: "Consistent 24px Spacing System",
+    title: "Consistent 16px Spacing System",
     before:
       "Section gaps varied between 8px, 16px, 24px and 32px with no clear rule, creating a visually uneven rhythm across the page.",
     after:
-      "All inter-section gaps standardized to 24px. A single padding value on the workspace container controls all lateral margins consistently.",
+      "All inter-section gaps standardized to 16px via a single --space-group token. A single padding value on the workspace container controls all lateral margins consistently.",
   },
   {
     tag: "Data",
