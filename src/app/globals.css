@@ -2278,6 +2278,13 @@ textarea,
 
 .tab-content-inner {
   padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-group);
+}
+
+.tab-card {
+  padding: var(--space-card);
 }
 
 .tab-section-head {

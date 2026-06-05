@@ -59,7 +59,7 @@ import {
 } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
 
-type ContentTab = "overview" | "activity" | "measurements" | "proposals" | "documents" | "invoices" | "production";
+type ContentTab = "overview" | "activity" | "measurements" | "proposals" | "documents" | "photos" | "invoices" | "production";
 
 export function JobWorkspace() {
   const [selectedMode, setSelectedMode] = useState<ComposerMode>("note");
@@ -242,6 +242,7 @@ export function JobWorkspace() {
             )}
             {activeTab === "measurements" && <MeasurementsView />}
             {activeTab === "documents" && <DocumentsView />}
+            {activeTab === "photos" && <PhotosView />}
             {activeTab === "proposals" && (
               <ProposalsView onCreateProposal={() => showToast("✓ Proposal draft started")} />
             )}
@@ -490,6 +491,7 @@ function ContentTabBar({
     { id: "measurements", label: "Measurements" },
     { id: "proposals",    label: "Proposals",    count: proposalCount },
     { id: "documents",    label: "Documents",    count: documentCount },
+    { id: "photos",       label: "Photos",       count: 6 },
     { id: "invoices",     label: "Invoices",     count: 0 },
     { id: "production",   label: "Production",   count: productionCount }
   ];
@@ -545,60 +547,65 @@ const mockPhotos = [
   { id: 6, label: "Interior water damage",       date: "Jun 3, 2026", color: "#334155" },
 ];
 
+function PhotosView() {
+  return (
+    <div className="tab-content-inner">
+      <section className="surface tab-card">
+        <div className="panel-head">
+          <h2 className="section-title">Damage Photos</h2>
+          <span className="count-pill">{mockPhotos.length}</span>
+          <button type="button" className="text-link" style={{ marginLeft: "auto" }}>
+            <Plus size={13} aria-hidden="true" />
+            Add photos
+          </button>
+        </div>
+        <div className="photo-grid">
+          {mockPhotos.map((photo) => (
+            <button key={photo.id} type="button" className="photo-thumb" aria-label={photo.label}>
+              <div className="photo-placeholder" style={{ background: photo.color }} aria-hidden="true">
+                <Image size={20} />
+              </div>
+              <span className="photo-label">{photo.label}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function DocumentsView() {
   return (
     <div className="tab-content-inner">
-      {/* Damage photos */}
-      <div className="tab-section-head">
-        <h2 className="section-title">
-          <Image size={15} aria-hidden="true" />
-          Damage Photos
-        </h2>
-        <span className="count-pill">{mockPhotos.length}</span>
-        <button type="button" className="button ghost compact" style={{ marginLeft: "auto" }}>
-          <Plus size={14} />
-          Add photos
-        </button>
-      </div>
-      <div className="photo-grid">
-        {mockPhotos.map((photo) => (
-          <button key={photo.id} type="button" className="photo-thumb" aria-label={photo.label}>
-            <div className="photo-placeholder" style={{ background: photo.color }} aria-hidden="true">
-              <Image size={20} />
-            </div>
-            <span className="photo-label">{photo.label}</span>
+      <section className="surface tab-card">
+        <div className="panel-head">
+          <h2 className="section-title">Documents</h2>
+          <button type="button" className="text-link" style={{ marginLeft: "auto" }}>
+            <Plus size={13} aria-hidden="true" />
+            Upload
           </button>
-        ))}
-      </div>
-
-      {/* Documents */}
-      <div className="tab-section-head" style={{ marginTop: 24 }}>
-        <h2 className="section-title">Documents</h2>
-        <button type="button" className="button ghost compact" style={{ marginLeft: "auto" }}>
-          <Plus size={14} />
-          Upload
-        </button>
-      </div>
-      <div className="doc-grid">
-        {mockDocuments.map((doc) => (
-          <button key={doc.id} type="button" className="doc-card" aria-label={`Open ${doc.name}`}>
-            <div className={`doc-icon ${doc.icon}`}>
-              {doc.icon === "pdf" && <FileText size={20} />}
-              {doc.icon === "img" && <Image size={20} />}
-              {doc.icon === "xls" && <FileText size={20} />}
-              {doc.icon === "misc" && <FileText size={20} />}
-            </div>
-            <div className="doc-meta">
-              <span className="doc-name">{doc.name}</span>
-              <span className="doc-info">{doc.size} · {doc.date}</span>
-            </div>
-            <div className={`doc-status ${doc.status}`}>
-              {doc.status === "signed" && <Check size={12} />}
-              {doc.statusLabel}
-            </div>
-          </button>
-        ))}
-      </div>
+        </div>
+        <div className="doc-grid">
+          {mockDocuments.map((doc) => (
+            <button key={doc.id} type="button" className="doc-card" aria-label={`Open ${doc.name}`}>
+              <div className={`doc-icon ${doc.icon}`}>
+                {doc.icon === "pdf" && <FileText size={20} />}
+                {doc.icon === "img" && <Image size={20} />}
+                {doc.icon === "xls" && <FileText size={20} />}
+                {doc.icon === "misc" && <FileText size={20} />}
+              </div>
+              <div className="doc-meta">
+                <span className="doc-name">{doc.name}</span>
+                <span className="doc-info">{doc.size} · {doc.date}</span>
+              </div>
+              <div className={`doc-status ${doc.status}`}>
+                {doc.status === "signed" && <Check size={12} />}
+                {doc.statusLabel}
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
