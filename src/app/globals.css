@@ -3503,6 +3503,166 @@ textarea,
   flex-wrap: nowrap;
 }
 
+/* ── Hero Communication Modals ───────────────────────────────────── */
+.hero-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: hmo-fade 0.15s ease;
+}
+@keyframes hmo-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.hero-modal {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.18);
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  animation: hmo-slide 0.15s ease;
+}
+.hero-modal-wide { width: 520px; }
+@keyframes hmo-slide {
+  from { transform: translateY(10px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.hero-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.hero-modal-head h3 { font-size: 15px; font-weight: 600; margin: 0; }
+
+.hero-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.hero-modal-close:hover { background: var(--page); color: var(--ink); }
+
+.hero-modal-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hero-modal-contact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--page);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px;
+}
+.hero-modal-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.hero-modal-name   { font-size: 14px; font-weight: 600; margin: 0; }
+.hero-modal-detail { font-size: 12.5px; color: var(--muted); margin: 2px 0 0; }
+.hero-modal-badge  {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--blue);
+  background: var(--blue-soft);
+  border-radius: 10px;
+  padding: 2px 8px;
+  margin-top: 5px;
+}
+
+.hero-modal-section { display: flex; flex-direction: column; gap: 7px; }
+.hero-modal-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin: 0;
+}
+.hero-modal-recent-call {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--page);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.hero-modal-rc-time { font-size: 13px; font-weight: 500; margin: 0; }
+.hero-modal-muted   { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
+
+.hero-modal-field { display: flex; flex-direction: column; gap: 6px; }
+.hero-modal-field label { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.hero-modal-field input,
+.hero-modal-field textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--panel);
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+  line-height: 1.5;
+}
+.hero-modal-field input:focus,
+.hero-modal-field textarea:focus { border-color: var(--orange); }
+
+.hero-modal-to-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--page);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.hero-modal-to-name  { font-size: 13px; font-weight: 500; }
+.hero-modal-to-email { font-size: 12.5px; color: var(--muted); }
+
+.hero-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid var(--line);
+}
+
 .hero-contact-icons {
   display: flex;
   align-items: center;

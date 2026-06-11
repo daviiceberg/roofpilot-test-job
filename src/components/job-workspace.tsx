@@ -82,6 +82,7 @@ export function JobWorkspace() {
 
   const [missedCallCount, setMissedCallCount] = useState(1);
   const [unansweredSmsCount, setUnansweredSmsCount] = useState(1);
+  const [heroModal, setHeroModal] = useState<"call" | "email" | "sms" | null>(null);
   const [smsThread, setSmsThread] = useState<SmsMessage[]>(initialSmsThread);
   const [dismissedAlertTypes, setDismissedAlertTypes] = useState<Set<string>>(new Set());
   const [highlightTaskId, setHighlightTaskId] = useState<number | null>(null);
@@ -251,6 +252,51 @@ export function JobWorkspace() {
     showToast("✓ Task created");
   }
 
+  function handleHeroCallAction() {
+    setHeroModal(null);
+    setTimeline(prev => [{
+      id: Date.now(),
+      type: "call",
+      title: "Outbound call — Hannah Weiss",
+      detail: "Call initiated via Communication Quick Actions · Dana Kim",
+      time: nowLabel(),
+      direction: "out",
+      rep: "Dana Kim",
+      durationLabel: "—",
+      status: "answered"
+    }, ...prev]);
+    showToast("✓ Call logged successfully");
+  }
+
+  function handleHeroEmailAction(subject: string, message: string) {
+    setHeroModal(null);
+    setTimeline(prev => [{
+      id: Date.now(),
+      type: "email",
+      title: "Email sent",
+      detail: subject || message.slice(0, 80),
+      time: nowLabel(),
+      direction: "out",
+      rep: "Dana Kim"
+    }, ...prev]);
+    showToast("✓ Email sent successfully");
+  }
+
+  function handleHeroSmsAction(message: string) {
+    setHeroModal(null);
+    setTimeline(prev => [{
+      id: Date.now(),
+      type: "sms_out",
+      title: "SMS sent",
+      detail: message.slice(0, 100) + (message.length > 100 ? "…" : ""),
+      time: nowLabel(),
+      direction: "out",
+      rep: "Dana Kim",
+      threadId: "main-thread"
+    }, ...prev]);
+    showToast("✓ SMS sent successfully");
+  }
+
   function handleAlertAction(type: string) {
     if (type === "call") routeToHub("call");
     else if (type === "sms") routeToHub("message");
@@ -289,11 +335,9 @@ export function JobWorkspace() {
         <JobHero
           onCreateProposal={() => showToast("✓ Proposal draft started")}
           labels={jobLabels}
-          missedCalls={commAlerts.missedCalls}
-          unansweredSms={commAlerts.unansweredSms}
-          onCall={() => routeToHub("call")}
-          onEmail={() => routeToHub("email")}
-          onSms={() => routeToHub("message")}
+          onCall={() => setHeroModal("call")}
+          onEmail={() => setHeroModal("email")}
+          onSms={() => setHeroModal("sms")}
         />
 
         <ContentTabBar
@@ -401,6 +445,16 @@ export function JobWorkspace() {
 
         {isDrawerOpen && (
           <ContactDrawer onClose={() => setIsDrawerOpen(false)} onSave={addContact} />
+        )}
+
+        {heroModal === "call" && (
+          <HeroCallModal onClose={() => setHeroModal(null)} onCall={handleHeroCallAction} />
+        )}
+        {heroModal === "email" && (
+          <HeroEmailModal onClose={() => setHeroModal(null)} onSend={handleHeroEmailAction} />
+        )}
+        {heroModal === "sms" && (
+          <HeroSmsModal onClose={() => setHeroModal(null)} onSend={handleHeroSmsAction} />
         )}
       </main>
     </AppShell>
@@ -941,20 +995,145 @@ function CommunicationHub({
   );
 }
 
+/* ── Hero Communication Modals ───────────────────────────────────── */
+function useModalDismiss(onClose: () => void) {
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+}
+
+function HeroCallModal({ onClose, onCall }: { onClose: () => void; onCall: () => void }) {
+  useModalDismiss(onClose);
+  return (
+    <div className="hero-modal-overlay" onMouseDown={onClose}>
+      <div className="hero-modal" onMouseDown={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Call customer">
+        <div className="hero-modal-head">
+          <h3>Call Customer</h3>
+          <button type="button" className="hero-modal-close" aria-label="Close" onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="hero-modal-body">
+          <div className="hero-modal-contact">
+            <div className="hero-modal-avatar">HW</div>
+            <div>
+              <p className="hero-modal-name">Hannah Weiss</p>
+              <p className="hero-modal-detail">+1 (512) 555-0148</p>
+              <span className="hero-modal-badge">Primary Contact</span>
+            </div>
+          </div>
+          <div className="hero-modal-section">
+            <p className="hero-modal-label">Recent Call</p>
+            <div className="hero-modal-recent-call">
+              <PhoneMissed size={14} color="var(--red)" aria-hidden="true" />
+              <div>
+                <p className="hero-modal-rc-time">Jun 11, 2026 · 11:38 AM</p>
+                <p className="hero-modal-muted">Missed Call</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="hero-modal-actions">
+          <button type="button" className="button ghost" onClick={onClose}>Cancel</button>
+          <button type="button" className="button primary" onClick={onCall}>
+            <Phone size={14} aria-hidden="true" />
+            Start Call
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeroEmailModal({ onClose, onSend }: { onClose: () => void; onSend: (subject: string, body: string) => void }) {
+  useModalDismiss(onClose);
+  const [subject, setSubject] = useState("Insurance Claim Follow-Up");
+  const [body, setBody] = useState(
+    "Hi Hannah,\n\nI wanted to follow up regarding your insurance claim and proposal review.\n\nPlease let me know if you have any questions.\n\nBest,\nDana Kim"
+  );
+  return (
+    <div className="hero-modal-overlay" onMouseDown={onClose}>
+      <div className="hero-modal hero-modal-wide" onMouseDown={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Send email">
+        <div className="hero-modal-head">
+          <h3>Send Email</h3>
+          <button type="button" className="hero-modal-close" aria-label="Close" onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="hero-modal-body">
+          <div className="hero-modal-field">
+            <label>To</label>
+            <div className="hero-modal-to-row">
+              <span className="hero-modal-to-name">Hannah Weiss</span>
+              <span className="hero-modal-to-email">hannah.weiss@example.com</span>
+            </div>
+          </div>
+          <div className="hero-modal-field">
+            <label htmlFor="hm-subject">Subject</label>
+            <input id="hm-subject" value={subject} onChange={e => setSubject(e.target.value)} />
+          </div>
+          <div className="hero-modal-field">
+            <label htmlFor="hm-body">Message</label>
+            <textarea id="hm-body" value={body} onChange={e => setBody(e.target.value)} rows={7} />
+          </div>
+        </div>
+        <div className="hero-modal-actions">
+          <button type="button" className="button ghost" onClick={onClose}>Cancel</button>
+          <button type="button" className="button primary" onClick={() => onSend(subject, body)}>
+            <Mail size={14} aria-hidden="true" />
+            Send Email
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeroSmsModal({ onClose, onSend }: { onClose: () => void; onSend: (message: string) => void }) {
+  useModalDismiss(onClose);
+  const [message, setMessage] = useState(
+    "Hi Hannah,\n\nJust checking in regarding your proposal review.\n\nLet me know if you have any questions."
+  );
+  return (
+    <div className="hero-modal-overlay" onMouseDown={onClose}>
+      <div className="hero-modal" onMouseDown={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Send SMS">
+        <div className="hero-modal-head">
+          <h3>Send SMS</h3>
+          <button type="button" className="hero-modal-close" aria-label="Close" onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="hero-modal-body">
+          <div className="hero-modal-field">
+            <label>To</label>
+            <div className="hero-modal-to-row">
+              <span className="hero-modal-to-name">Hannah Weiss</span>
+              <span className="hero-modal-to-email">+1 (512) 555-0148</span>
+            </div>
+          </div>
+          <div className="hero-modal-field">
+            <label htmlFor="hm-sms">Message</label>
+            <textarea id="hm-sms" value={message} onChange={e => setMessage(e.target.value)} rows={5} />
+          </div>
+        </div>
+        <div className="hero-modal-actions">
+          <button type="button" className="button ghost" onClick={onClose}>Cancel</button>
+          <button type="button" className="button primary" onClick={() => onSend(message)}>
+            <MessageSquare size={14} aria-hidden="true" />
+            Send SMS
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Job Hero (slim — inline contact icons) ─────────────────────── */
 function JobHero({
   onCreateProposal,
   labels = [],
-  missedCalls,
-  unansweredSms,
   onCall,
   onEmail,
   onSms
 }: {
   onCreateProposal: () => void;
   labels?: string[];
-  missedCalls: number;
-  unansweredSms: number;
   onCall: () => void;
   onEmail: () => void;
   onSms: () => void;
@@ -998,11 +1177,10 @@ function JobHero({
                   type="button"
                   className="hero-icon-btn"
                   title="Call"
-                  aria-label={missedCalls > 0 ? "Call — 1 missed call" : "Call"}
+                  aria-label="Call"
                   onClick={onCall}
                 >
                   <Phone size={15} aria-hidden="true" />
-                  {missedCalls > 0 && <span className="hero-icon-dot" aria-hidden="true" />}
                 </button>
                 <button
                   type="button"
@@ -1017,11 +1195,10 @@ function JobHero({
                   type="button"
                   className="hero-icon-btn"
                   title="SMS"
-                  aria-label={unansweredSms > 0 ? "SMS — 1 unanswered" : "SMS"}
+                  aria-label="SMS"
                   onClick={onSms}
                 >
                   <MessageSquare size={15} aria-hidden="true" />
-                  {unansweredSms > 0 && <span className="hero-icon-dot hero-icon-dot-amber" aria-hidden="true" />}
                 </button>
               </div>
             </div>
