@@ -82,7 +82,7 @@ export function JobWorkspace() {
 
   const [missedCallCount, setMissedCallCount] = useState(1);
   const [unansweredSmsCount, setUnansweredSmsCount] = useState(1);
-  const [heroModal, setHeroModal] = useState<"call" | "email" | "sms" | null>(null);
+  const [heroModal, setHeroModal] = useState<{ type: "call" | "email" | "sms"; contact: Contact } | null>(null);
   const [smsThread, setSmsThread] = useState<SmsMessage[]>(initialSmsThread);
   const [dismissedAlertTypes, setDismissedAlertTypes] = useState<Set<string>>(new Set());
   const [highlightTaskId, setHighlightTaskId] = useState<number | null>(null);
@@ -252,13 +252,14 @@ export function JobWorkspace() {
     showToast("✓ Task created");
   }
 
-  function handleHeroCallAction() {
+  function handleHeroCallAction(contact: Contact) {
+    const fullName = `${contact.firstName} ${contact.lastName}`;
     setHeroModal(null);
     setTimeline(prev => [{
       id: Date.now(),
       type: "call",
-      title: "Outbound call — Hannah Weiss",
-      detail: "Call initiated via Communication Quick Actions · Dana Kim",
+      title: `Outbound call — ${fullName}`,
+      detail: `Call initiated via Communication Quick Actions · Dana Kim`,
       time: nowLabel(),
       direction: "out",
       rep: "Dana Kim",
@@ -268,12 +269,13 @@ export function JobWorkspace() {
     showToast("✓ Call logged successfully");
   }
 
-  function handleHeroEmailAction(subject: string, message: string) {
+  function handleHeroEmailAction(contact: Contact, subject: string, message: string) {
+    const fullName = `${contact.firstName} ${contact.lastName}`;
     setHeroModal(null);
     setTimeline(prev => [{
       id: Date.now(),
       type: "email",
-      title: "Email sent",
+      title: `Email sent — ${fullName}`,
       detail: subject || message.slice(0, 80),
       time: nowLabel(),
       direction: "out",
@@ -282,12 +284,13 @@ export function JobWorkspace() {
     showToast("✓ Email sent successfully");
   }
 
-  function handleHeroSmsAction(message: string) {
+  function handleHeroSmsAction(contact: Contact, message: string) {
+    const fullName = `${contact.firstName} ${contact.lastName}`;
     setHeroModal(null);
     setTimeline(prev => [{
       id: Date.now(),
       type: "sms_out",
-      title: "SMS sent",
+      title: `SMS sent — ${fullName}`,
       detail: message.slice(0, 100) + (message.length > 100 ? "…" : ""),
       time: nowLabel(),
       direction: "out",
@@ -335,9 +338,9 @@ export function JobWorkspace() {
         <JobHero
           onCreateProposal={() => showToast("✓ Proposal draft started")}
           labels={jobLabels}
-          onCall={() => setHeroModal("call")}
-          onEmail={() => setHeroModal("email")}
-          onSms={() => setHeroModal("sms")}
+          onCall={() => setHeroModal({ type: "call", contact: primaryContact })}
+          onEmail={() => setHeroModal({ type: "email", contact: primaryContact })}
+          onSms={() => setHeroModal({ type: "sms", contact: primaryContact })}
         />
 
         <ContentTabBar
@@ -421,7 +424,13 @@ export function JobWorkspace() {
               onAddTask={() => routeToHub("task")}
               highlightTaskId={highlightTaskId}
             />
-            <ContactsCard contacts={contacts} openDrawer={() => setIsDrawerOpen(true)} />
+            <ContactsCard
+              contacts={contacts}
+              openDrawer={() => setIsDrawerOpen(true)}
+              onCall={c => setHeroModal({ type: "call", contact: c })}
+              onEmail={c => setHeroModal({ type: "email", contact: c })}
+              onSms={c => setHeroModal({ type: "sms", contact: c })}
+            />
             <CollapsibleCard
               title="Insurance"
               subtitle="State Farm · $1,500 ded. · CLM-582741"
@@ -447,14 +456,14 @@ export function JobWorkspace() {
           <ContactDrawer onClose={() => setIsDrawerOpen(false)} onSave={addContact} />
         )}
 
-        {heroModal === "call" && (
-          <HeroCallModal onClose={() => setHeroModal(null)} onCall={handleHeroCallAction} />
+        {heroModal?.type === "call" && (
+          <HeroCallModal contact={heroModal.contact} onClose={() => setHeroModal(null)} onCall={() => handleHeroCallAction(heroModal.contact)} />
         )}
-        {heroModal === "email" && (
-          <HeroEmailModal onClose={() => setHeroModal(null)} onSend={handleHeroEmailAction} />
+        {heroModal?.type === "email" && (
+          <HeroEmailModal contact={heroModal.contact} onClose={() => setHeroModal(null)} onSend={(s, b) => handleHeroEmailAction(heroModal.contact, s, b)} />
         )}
-        {heroModal === "sms" && (
-          <HeroSmsModal onClose={() => setHeroModal(null)} onSend={handleHeroSmsAction} />
+        {heroModal?.type === "sms" && (
+          <HeroSmsModal contact={heroModal.contact} onClose={() => setHeroModal(null)} onSend={(m) => handleHeroSmsAction(heroModal.contact, m)} />
         )}
       </main>
     </AppShell>
@@ -1004,8 +1013,10 @@ function useModalDismiss(onClose: () => void) {
   }, [onClose]);
 }
 
-function HeroCallModal({ onClose, onCall }: { onClose: () => void; onCall: () => void }) {
+function HeroCallModal({ contact, onClose, onCall }: { contact: Contact; onClose: () => void; onCall: () => void }) {
   useModalDismiss(onClose);
+  const initials = `${contact.firstName[0]}${contact.lastName[0]}`;
+  const fullName = `${contact.firstName} ${contact.lastName}`;
   return (
     <div className="hero-modal-overlay" onMouseDown={onClose}>
       <div className="hero-modal" onMouseDown={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Call customer">
@@ -1015,11 +1026,11 @@ function HeroCallModal({ onClose, onCall }: { onClose: () => void; onCall: () =>
         </div>
         <div className="hero-modal-body">
           <div className="hero-modal-contact">
-            <div className="hero-modal-avatar">HW</div>
+            <div className="hero-modal-avatar">{initials}</div>
             <div>
-              <p className="hero-modal-name">Hannah Weiss</p>
-              <p className="hero-modal-detail">+1 (512) 555-0148</p>
-              <span className="hero-modal-badge">Primary Contact</span>
+              <p className="hero-modal-name">{fullName}</p>
+              <p className="hero-modal-detail">{contact.phone}</p>
+              {contact.isPrimary && <span className="hero-modal-badge">Primary Contact</span>}
             </div>
           </div>
           <div className="hero-modal-section">
@@ -1045,11 +1056,12 @@ function HeroCallModal({ onClose, onCall }: { onClose: () => void; onCall: () =>
   );
 }
 
-function HeroEmailModal({ onClose, onSend }: { onClose: () => void; onSend: (subject: string, body: string) => void }) {
+function HeroEmailModal({ contact, onClose, onSend }: { contact: Contact; onClose: () => void; onSend: (subject: string, body: string) => void }) {
   useModalDismiss(onClose);
+  const fullName = `${contact.firstName} ${contact.lastName}`;
   const [subject, setSubject] = useState("Insurance Claim Follow-Up");
   const [body, setBody] = useState(
-    "Hi Hannah,\n\nI wanted to follow up regarding your insurance claim and proposal review.\n\nPlease let me know if you have any questions.\n\nBest,\nDana Kim"
+    `Hi ${contact.firstName},\n\nI wanted to follow up regarding your insurance claim and proposal review.\n\nPlease let me know if you have any questions.\n\nBest,\nDana Kim`
   );
   return (
     <div className="hero-modal-overlay" onMouseDown={onClose}>
@@ -1062,8 +1074,8 @@ function HeroEmailModal({ onClose, onSend }: { onClose: () => void; onSend: (sub
           <div className="hero-modal-field">
             <label>To</label>
             <div className="hero-modal-to-row">
-              <span className="hero-modal-to-name">Hannah Weiss</span>
-              <span className="hero-modal-to-email">hannah.weiss@example.com</span>
+              <span className="hero-modal-to-name">{fullName}</span>
+              <span className="hero-modal-to-email">{contact.email}</span>
             </div>
           </div>
           <div className="hero-modal-field">
@@ -1087,10 +1099,11 @@ function HeroEmailModal({ onClose, onSend }: { onClose: () => void; onSend: (sub
   );
 }
 
-function HeroSmsModal({ onClose, onSend }: { onClose: () => void; onSend: (message: string) => void }) {
+function HeroSmsModal({ contact, onClose, onSend }: { contact: Contact; onClose: () => void; onSend: (message: string) => void }) {
   useModalDismiss(onClose);
+  const fullName = `${contact.firstName} ${contact.lastName}`;
   const [message, setMessage] = useState(
-    "Hi Hannah,\n\nJust checking in regarding your proposal review.\n\nLet me know if you have any questions."
+    `Hi ${contact.firstName},\n\nJust checking in regarding your proposal review.\n\nLet me know if you have any questions.`
   );
   return (
     <div className="hero-modal-overlay" onMouseDown={onClose}>
@@ -1103,8 +1116,8 @@ function HeroSmsModal({ onClose, onSend }: { onClose: () => void; onSend: (messa
           <div className="hero-modal-field">
             <label>To</label>
             <div className="hero-modal-to-row">
-              <span className="hero-modal-to-name">Hannah Weiss</span>
-              <span className="hero-modal-to-email">+1 (512) 555-0148</span>
+              <span className="hero-modal-to-name">{fullName}</span>
+              <span className="hero-modal-to-email">{contact.phone}</span>
             </div>
           </div>
           <div className="hero-modal-field">
@@ -1662,7 +1675,12 @@ function AiRecommendations({ onAction }: { onAction: (action: AiAction) => void 
 }
 
 /* ── Contact Block ─────────────────────────────────────────────── */
-function ContactBlock({ contact }: { contact: Contact }) {
+function ContactBlock({ contact, onCall, onEmail, onSms }: {
+  contact: Contact;
+  onCall: (c: Contact) => void;
+  onEmail: (c: Contact) => void;
+  onSms: (c: Contact) => void;
+}) {
   return (
     <article className="contact-block">
       <div className="contact-block-head">
@@ -1679,13 +1697,13 @@ function ContactBlock({ contact }: { contact: Contact }) {
           </p>
         </div>
         <div className="contact-actions">
-          <button type="button" className="icon-button small" aria-label={`Call ${contact.firstName}`} title="Call">
+          <button type="button" className="icon-button small" aria-label={`Call ${contact.firstName}`} title="Call" onClick={() => onCall(contact)}>
             <Phone size={14} />
           </button>
-          <button type="button" className="icon-button small" aria-label={`Email ${contact.firstName}`} title="Email">
+          <button type="button" className="icon-button small" aria-label={`Email ${contact.firstName}`} title="Email" onClick={() => onEmail(contact)}>
             <Mail size={14} />
           </button>
-          <button type="button" className="icon-button small" aria-label={`Message ${contact.firstName}`} title="Message">
+          <button type="button" className="icon-button small" aria-label={`Message ${contact.firstName}`} title="Message" onClick={() => onSms(contact)}>
             <MessageSquare size={14} />
           </button>
           <button type="button" className="icon-button small" aria-label={`View history for ${contact.firstName}`} title="View history">
@@ -1698,7 +1716,13 @@ function ContactBlock({ contact }: { contact: Contact }) {
 }
 
 /* ── Contacts Card ─────────────────────────────────────────────── */
-function ContactsCard({ contacts, openDrawer }: { contacts: Contact[]; openDrawer: () => void }) {
+function ContactsCard({ contacts, openDrawer, onCall, onEmail, onSms }: {
+  contacts: Contact[];
+  openDrawer: () => void;
+  onCall: (c: Contact) => void;
+  onEmail: (c: Contact) => void;
+  onSms: (c: Contact) => void;
+}) {
   const [open, setOpen] = useState(false);
   const total = contacts.length + 1;
 
@@ -1728,9 +1752,9 @@ function ContactsCard({ contacts, openDrawer }: { contacts: Contact[]; openDrawe
                 Add another contact
               </button>
             </div>
-            <ContactBlock contact={primaryContact} />
+            <ContactBlock contact={primaryContact} onCall={onCall} onEmail={onEmail} onSms={onSms} />
             {contacts.map((contact) => (
-              <ContactBlock key={`${contact.email}-${contact.phone}`} contact={contact} />
+              <ContactBlock key={`${contact.email}-${contact.phone}`} contact={contact} onCall={onCall} onEmail={onEmail} onSms={onSms} />
             ))}
           </>
         )}
