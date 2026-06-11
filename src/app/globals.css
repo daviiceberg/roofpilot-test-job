@@ -3663,6 +3663,42 @@ textarea,
   border-top: 1px solid var(--line);
 }
 
+.hero-modal-task-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--red-soft);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px;
+}
+.hero-modal-task-icon { color: var(--red); flex-shrink: 0; margin-top: 1px; }
+.hero-modal-task-title { font-size: 14px; font-weight: 600; margin: 0; }
+
+.hero-modal-task-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.hero-modal-task-tag {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--page);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 2px 9px;
+}
+.hero-modal-task-priority {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--red);
+  background: var(--red-soft);
+  border-radius: 10px;
+  padding: 2px 9px;
+}
+
 .hero-contact-icons {
   display: flex;
   align-items: center;

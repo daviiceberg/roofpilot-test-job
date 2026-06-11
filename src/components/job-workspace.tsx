@@ -82,7 +82,11 @@ export function JobWorkspace() {
 
   const [missedCallCount, setMissedCallCount] = useState(1);
   const [unansweredSmsCount, setUnansweredSmsCount] = useState(1);
-  const [heroModal, setHeroModal] = useState<{ type: "call" | "email" | "sms"; contact: Contact } | null>(null);
+  const [heroModal, setHeroModal] = useState<
+    | { type: "call" | "email" | "sms"; contact: Contact }
+    | { type: "task" }
+    | null
+  >(null);
   const [smsThread, setSmsThread] = useState<SmsMessage[]>(initialSmsThread);
   const [dismissedAlertTypes, setDismissedAlertTypes] = useState<Set<string>>(new Set());
   const [highlightTaskId, setHighlightTaskId] = useState<number | null>(null);
@@ -300,16 +304,15 @@ export function JobWorkspace() {
     showToast("✓ SMS sent successfully");
   }
 
+  function handleHeroTaskComplete() {
+    setHeroModal(null);
+    completeTask(4, "Send updated estimate to adjuster");
+  }
+
   function handleAlertAction(type: string) {
-    if (type === "call") routeToHub("call");
-    else if (type === "sms") routeToHub("message");
-    else if (type === "task") {
-      setHighlightTaskId(4);
-      window.setTimeout(() => {
-        document.querySelector(".task-row-overdue")?.scrollIntoView({ behavior: "smooth", block: "center" });
-        window.setTimeout(() => setHighlightTaskId(null), 2500);
-      }, 100);
-    }
+    if (type === "call") setHeroModal({ type: "call", contact: primaryContact });
+    else if (type === "sms") setHeroModal({ type: "sms", contact: primaryContact });
+    else if (type === "task") setHeroModal({ type: "task" });
   }
 
   return (
@@ -456,6 +459,9 @@ export function JobWorkspace() {
           <ContactDrawer onClose={() => setIsDrawerOpen(false)} onSave={addContact} />
         )}
 
+        {heroModal?.type === "task" && (
+          <HeroTaskModal onClose={() => setHeroModal(null)} onComplete={handleHeroTaskComplete} />
+        )}
         {heroModal?.type === "call" && (
           <HeroCallModal contact={heroModal.contact} onClose={() => setHeroModal(null)} onCall={() => handleHeroCallAction(heroModal.contact)} />
         )}
@@ -1011,6 +1017,41 @@ function useModalDismiss(onClose: () => void) {
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
+}
+
+function HeroTaskModal({ onClose, onComplete }: { onClose: () => void; onComplete: () => void }) {
+  useModalDismiss(onClose);
+  return (
+    <div className="hero-modal-overlay" onMouseDown={onClose}>
+      <div className="hero-modal" onMouseDown={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Overdue task">
+        <div className="hero-modal-head">
+          <h3>Overdue Task</h3>
+          <button type="button" className="hero-modal-close" aria-label="Close" onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="hero-modal-body">
+          <div className="hero-modal-task-row">
+            <AlertTriangle size={15} className="hero-modal-task-icon" aria-hidden="true" />
+            <div>
+              <p className="hero-modal-task-title">Send updated estimate to adjuster</p>
+              <p className="hero-modal-muted">Due Jun 9, 2026 · 2 days overdue</p>
+            </div>
+          </div>
+          <div className="hero-modal-task-meta">
+            <span className="hero-modal-task-tag">Estimate</span>
+            <span className="hero-modal-task-tag">Adjuster</span>
+            <span className="hero-modal-task-priority">High priority</span>
+          </div>
+        </div>
+        <div className="hero-modal-actions">
+          <button type="button" className="button ghost" onClick={onClose}>Cancel</button>
+          <button type="button" className="button primary" onClick={onComplete}>
+            <Check size={14} aria-hidden="true" />
+            Mark as Done
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function HeroCallModal({ contact, onClose, onCall }: { contact: Contact; onClose: () => void; onCall: () => void }) {
