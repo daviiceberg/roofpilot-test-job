@@ -88,9 +88,9 @@ export function JobWorkspace() {
 
   const [tasks, setTasks] = useState<TaskItem[]>([
     { id: 4, title: "Send updated estimate to adjuster", priority: "high", dueDate: "Jun 9, 2026", tags: ["Estimate", "Adjuster"], isOverdue: true },
-    { id: 1, title: "Review estimate with Hannah", priority: "high", dueDate: "Jun 5, 2026", tags: ["Estimate", "Homeowner"] },
-    { id: 2, title: "Confirm material selections", priority: "medium", dueDate: "Jun 6, 2026", tags: ["Materials"] },
-    { id: 3, title: "Send proposal once approved", priority: "medium", tags: ["Proposal"] },
+    { id: 1, title: "Review estimate with Hannah", priority: "high", dueDate: "Jun 12, 2026", tags: ["Estimate", "Homeowner"] },
+    { id: 2, title: "Confirm material selections", priority: "medium", dueDate: "Jun 15, 2026", tags: ["Materials"] },
+    { id: 3, title: "Send proposal once approved", priority: "medium", dueDate: "Jun 18, 2026", tags: ["Proposal"] },
   ]);
 
   const displayedMissedCalls = dismissedAlertTypes.has("missed_call") ? 0 : missedCallCount;
@@ -289,7 +289,8 @@ export function JobWorkspace() {
         <JobHero
           onCreateProposal={() => showToast("✓ Proposal draft started")}
           labels={jobLabels}
-          alerts={commAlerts}
+          missedCalls={commAlerts.missedCalls}
+          unansweredSms={commAlerts.unansweredSms}
           onCall={() => routeToHub("call")}
           onEmail={() => routeToHub("email")}
           onSms={() => routeToHub("message")}
@@ -302,7 +303,7 @@ export function JobWorkspace() {
           documentCount={5}
           proposalCount={2}
           productionCount={materialOrders.length + workOrders.length}
-          hasAlerts={commAlerts.total > 0}
+          alertsTotal={commAlerts.total}
         />
 
         <section className="layout-shell">
@@ -944,14 +945,16 @@ function CommunicationHub({
 function JobHero({
   onCreateProposal,
   labels = [],
-  alerts,
+  missedCalls,
+  unansweredSms,
   onCall,
   onEmail,
   onSms
 }: {
   onCreateProposal: () => void;
   labels?: string[];
-  alerts: CommAlerts;
+  missedCalls: number;
+  unansweredSms: number;
   onCall: () => void;
   onEmail: () => void;
   onSms: () => void;
@@ -995,11 +998,11 @@ function JobHero({
                   type="button"
                   className="hero-icon-btn"
                   title="Call"
-                  aria-label={alerts.missedCalls > 0 ? "Call — 1 missed call" : "Call"}
+                  aria-label={missedCalls > 0 ? "Call — 1 missed call" : "Call"}
                   onClick={onCall}
                 >
                   <Phone size={15} aria-hidden="true" />
-                  {alerts.missedCalls > 0 && <span className="hero-icon-dot" aria-hidden="true" />}
+                  {missedCalls > 0 && <span className="hero-icon-dot" aria-hidden="true" />}
                 </button>
                 <button
                   type="button"
@@ -1014,11 +1017,11 @@ function JobHero({
                   type="button"
                   className="hero-icon-btn"
                   title="SMS"
-                  aria-label={alerts.unansweredSms > 0 ? "SMS — 1 unanswered" : "SMS"}
+                  aria-label={unansweredSms > 0 ? "SMS — 1 unanswered" : "SMS"}
                   onClick={onSms}
                 >
                   <MessageSquare size={15} aria-hidden="true" />
-                  {alerts.unansweredSms > 0 && <span className="hero-icon-dot hero-icon-dot-amber" aria-hidden="true" />}
+                  {unansweredSms > 0 && <span className="hero-icon-dot hero-icon-dot-amber" aria-hidden="true" />}
                 </button>
               </div>
             </div>
@@ -1119,7 +1122,7 @@ function ContentTabBar({
   documentCount,
   proposalCount,
   productionCount,
-  hasAlerts
+  alertsTotal = 0
 }: {
   activeTab: ContentTab;
   setActiveTab: (tab: ContentTab) => void;
@@ -1127,7 +1130,7 @@ function ContentTabBar({
   documentCount: number;
   proposalCount: number;
   productionCount: number;
-  hasAlerts?: boolean;
+  alertsTotal?: number;
 }) {
   const tabs: { id: ContentTab; label: string; count?: number }[] = [
     { id: "overview",     label: "Overview" },
@@ -1156,7 +1159,7 @@ function ContentTabBar({
             {tab.count !== undefined && (
               <span className="ctab-count">{tab.count}</span>
             )}
-            {tab.id === "activity" && hasAlerts && (
+            {tab.id === "activity" && alertsTotal > 0 && (
               <span className="ctab-alert-dot" aria-label="Has alerts" />
             )}
           </button>
