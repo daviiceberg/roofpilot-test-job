@@ -1,20 +1,26 @@
 "use client";
 
 import {
+  AlertTriangle,
   BarChart3,
+  Bell,
   Briefcase,
   Calendar,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   FileText,
   HelpCircle,
   Home,
+  MessageSquare,
+  PhoneMissed,
   Search,
   Settings,
   Users,
-  Bell
+  X
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import type { CommAlerts } from "@/lib/job-data";
 
 const navItems = [
   { id: "home", label: "Home", icon: Home, active: false },
@@ -25,13 +31,46 @@ const navItems = [
   { id: "reports", label: "Reports", icon: BarChart3, active: false }
 ] as const;
 
-export function AppShell({ children, jobIndex = 1, jobTotal = 11, onPrev, onNext }: {
+export function AppShell({
+  children,
+  jobIndex = 1,
+  jobTotal = 11,
+  onPrev,
+  onNext,
+  alertCount = 0,
+  alerts,
+  onAlertAction,
+  onDismissAlert
+}: {
   children: ReactNode;
   jobIndex?: number;
   jobTotal?: number;
   onPrev?: () => void;
   onNext?: () => void;
+  alertCount?: number;
+  alerts?: CommAlerts;
+  onAlertAction?: (type: string) => void;
+  onDismissAlert?: (type: string) => void;
 }) {
+  const [bellOpen, setBellOpen] = useState(false);
+  const bellWrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!bellOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (!bellWrapRef.current?.contains(e.target as Node)) setBellOpen(false);
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setBellOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [bellOpen]);
+
   return (
     <div className="app-root">
       <nav className="icon-rail" aria-label="Main navigation">
@@ -71,9 +110,120 @@ export function AppShell({ children, jobIndex = 1, jobTotal = 11, onPrev, onNext
             </label>
           </div>
           <div className="top-bar-right">
-            <button type="button" className="top-icon-btn" aria-label="Notifications" title="Notifications">
-              <Bell size={18} />
-            </button>
+            <div className="bell-btn-wrap" ref={bellWrapRef}>
+              <button
+                type="button"
+                className="top-icon-btn"
+                aria-label={alertCount > 0 ? `Notifications — ${alertCount} alert${alertCount > 1 ? "s" : ""}` : "Notifications"}
+                aria-expanded={bellOpen}
+                title="Notifications"
+                onClick={() => setBellOpen((v) => !v)}
+              >
+                <Bell size={18} />
+                {alertCount > 0 && (
+                  <span className="bell-badge" aria-hidden="true">{alertCount}</span>
+                )}
+              </button>
+
+              {bellOpen && (
+                <div className="bell-dropdown" role="dialog" aria-label="Notifications">
+                  <div className="bell-dropdown-head">
+                    <span>Notifications</span>
+                    <button
+                      type="button"
+                      className="bell-dropdown-close"
+                      aria-label="Close notifications"
+                      onClick={() => setBellOpen(false)}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+
+                  {(alerts?.total ?? 0) === 0 ? (
+                    <div className="bell-empty">
+                      <CheckCircle2 size={22} color="var(--green)" aria-hidden="true" />
+                      You&rsquo;re all caught up
+                    </div>
+                  ) : (
+                    <>
+                      {(alerts?.missedCalls ?? 0) > 0 && (
+                        <div className="bell-alert-row">
+                          <PhoneMissed size={15} className="bell-alert-icon" color="var(--red)" aria-hidden="true" />
+                          <div className="bell-alert-text">
+                            <strong>1 missed call</strong> from Hannah Weiss
+                            <span className="bell-alert-time">· 11:38 AM</span>
+                          </div>
+                          <button
+                            type="button"
+                            className="bell-alert-action"
+                            onClick={() => { onAlertAction?.("call"); setBellOpen(false); }}
+                          >
+                            Call back
+                          </button>
+                          <button
+                            type="button"
+                            className="bell-alert-dismiss"
+                            aria-label="Dismiss missed call alert"
+                            onClick={() => { onDismissAlert?.("missed_call"); }}
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      )}
+                      {(alerts?.unansweredSms ?? 0) > 0 && (
+                        <div className="bell-alert-row">
+                          <MessageSquare size={15} className="bell-alert-icon" color="var(--amber)" aria-hidden="true" />
+                          <div className="bell-alert-text">
+                            <strong>1 unanswered SMS</strong> from Hannah Weiss
+                            <span className="bell-alert-time">· 2h ago</span>
+                          </div>
+                          <button
+                            type="button"
+                            className="bell-alert-action"
+                            onClick={() => { onAlertAction?.("sms"); setBellOpen(false); }}
+                          >
+                            Reply
+                          </button>
+                          <button
+                            type="button"
+                            className="bell-alert-dismiss"
+                            aria-label="Dismiss SMS alert"
+                            onClick={() => { onDismissAlert?.("sms"); }}
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      )}
+                      {(alerts?.overdueTasks ?? 0) > 0 && (
+                        <div className="bell-alert-row">
+                          <AlertTriangle size={15} className="bell-alert-icon" color="var(--red)" aria-hidden="true" />
+                          <div className="bell-alert-text">
+                            <strong>1 overdue task:</strong> Send updated estimate to adjuster
+                            <span className="bell-alert-time">· due Jun 9</span>
+                          </div>
+                          <button
+                            type="button"
+                            className="bell-alert-action"
+                            onClick={() => { onAlertAction?.("task"); setBellOpen(false); }}
+                          >
+                            View task
+                          </button>
+                          <button
+                            type="button"
+                            className="bell-alert-dismiss"
+                            aria-label="Dismiss task alert"
+                            onClick={() => { onDismissAlert?.("task_overdue"); }}
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
             <button type="button" className="top-icon-btn" aria-label="Help" title="Help">
               <HelpCircle size={18} />
             </button>

@@ -414,7 +414,7 @@ select:focus-visible {
 
 .workspace {
   flex: 1;
-  padding: 0 24px var(--space-group);
+  padding: 0 16px var(--space-group);
 }
 
 .error-banner {
@@ -3440,3 +3440,639 @@ textarea,
 }
 
 .invoices-empty .text-secondary { font-size: 13px; max-width: 340px; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   COMMUNICATION HUB v2 — Hub, Bell, Hero icons
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Timeline: activity types ───────────────────────────────────── */
+.tl-call           { color: var(--blue); background: var(--blue-soft); }
+.tl-missed-call    { color: var(--red);  background: var(--red-soft); }
+.tl-sms-in         { color: var(--amber); background: var(--amber-soft); }
+.tl-sms-out        { color: var(--blue); background: var(--blue-soft); }
+.tl-email-received { color: var(--blue); background: var(--blue-soft); }
+.tl-task-completed { color: var(--green); background: var(--green-soft); }
+.tl-task-overdue   { color: var(--red);  background: var(--red-soft); }
+
+.timeline-card.tl-missed-call { border-left-color: var(--red); }
+.timeline-card.tl-task-overdue { border-left-color: var(--red); }
+.timeline-card.tl-sms-in      { border-left-color: var(--amber); }
+.timeline-card.tl-task-completed { border-left-color: var(--green); }
+
+/* Timeline top-right pills */
+.timeline-top-right { display: flex; align-items: center; gap: 6px; }
+
+.tl-status-pill {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.tl-pill-missed    { background: var(--red-soft);   color: var(--red);   border: 1px solid rgba(220,38,38,0.2); }
+.tl-pill-unanswered { background: var(--amber-soft); color: var(--amber); border: 1px solid rgba(217,119,6,0.2); }
+
+/* Timeline rep + action link */
+.tl-rep { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.tl-action-link { margin-top: 6px; display: inline-block; font-size: 12px; }
+
+/* Call inline expand */
+.call-expand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.call-expand-row .text-meta { font-size: 12px; }
+.call-expand-row .button { padding: 4px 10px; font-size: 12px; gap: 4px; }
+
+.timeline-card-clickable:hover { background: var(--panel-soft); }
+@media (prefers-reduced-motion: no-preference) {
+  .timeline-card-expanded { transition: background 150ms ease-out; }
+}
+
+/* ── Hero inline contact icons ──────────────────────────────────── */
+.hero-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.hero-contact-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.hero-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  position: relative;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.hero-icon-btn:hover {
+  color: var(--orange);
+  border-color: var(--orange);
+  background: var(--orange-soft);
+}
+
+.hero-icon-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 2px solid var(--panel);
+}
+.hero-icon-dot-amber { background: var(--amber); }
+
+/* ── Activity tab alert dot ─────────────────────────────────────── */
+.ctab-alert-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--red);
+  border-radius: 50%;
+  margin-left: 4px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* ── Overdue task styling ────────────────────────────────────────── */
+.task-row-overdue {
+  background: var(--red-soft);
+  border-color: rgba(220,38,38,0.35);
+  border-left: 3px solid var(--red);
+}
+.task-due-overdue { color: var(--red) !important; font-weight: 600; }
+.task-overdue-pill {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--red);
+  background: var(--red-soft);
+  border: 1px solid rgba(220,38,38,0.2);
+  border-radius: 20px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+/* ── Communication Hub ───────────────────────────────────────────── */
+.comm-hub {
+  padding: 12px 16px 0;
+  overflow: hidden;
+}
+
+.hub-mode-bar {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* Segment mode dot (alert indicator on mode tabs) */
+.segment-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.segment-dot-red   { background: var(--red); }
+.segment-dot-amber { background: var(--amber); }
+
+.hub-body { padding: 12px 0 0; }
+
+/* ── Email thread in hub ────────────────────────────────────────── */
+.hub-email-thread {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.email-thread-item {
+  border-bottom: 1px solid var(--line);
+}
+.email-thread-item:last-child { border-bottom: none; }
+
+.email-thread-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  transition: background 0.12s;
+  overflow: hidden;
+}
+.email-thread-item-header:hover { background: var(--page); }
+
+.email-thread-dir-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.email-thread-dir-out { background: var(--blue-soft);  color: var(--blue); }
+.email-thread-dir-in  { background: var(--amber-soft); color: var(--amber); }
+
+.email-thread-header-text {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.email-thread-from { font-weight: 600; font-size: 12.5px; white-space: nowrap; }
+.email-thread-time { font-size: 11px; }
+.email-thread-snippet {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  flex-shrink: 1;
+}
+
+.email-opens-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--blue-soft);
+  color: var(--blue);
+  padding: 2px 7px;
+  border-radius: 20px;
+  border: 1px solid rgba(37,99,235,0.15);
+  flex-shrink: 0;
+}
+
+.email-thread-item-body {
+  padding: 8px 12px 14px;
+}
+.email-thread-meta {
+  font-size: 12px;
+  margin-bottom: 10px;
+  color: var(--muted);
+}
+.email-thread-body-text {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--ink);
+}
+.email-thread-body-text p { margin: 0 0 10px; white-space: pre-wrap; }
+
+/* ── SMS thread in hub ──────────────────────────────────────────── */
+.hub-sms-thread {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 8px 2px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hub-sms-bubble-row { display: flex; }
+.hub-sms-bubble-row.sms-out { justify-content: flex-end; }
+.hub-sms-bubble-row.sms-in  { justify-content: flex-start; }
+
+.hub-sms-bubble {
+  max-width: 80%;
+  padding: 8px 12px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.hub-sms-bubble-out {
+  background: var(--blue);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.hub-sms-bubble-in {
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-bottom-left-radius: 4px;
+}
+
+.hub-sms-bubble-text { font-size: 13px; line-height: 1.5; margin: 0; }
+.hub-sms-time     { font-size: 10.5px; color: rgba(255,255,255,0.7); }
+.hub-sms-time-in  { font-size: 10.5px; color: var(--muted); }
+.hub-sms-awaiting { font-size: 10.5px; font-weight: 600; color: var(--amber); margin-top: 2px; }
+
+.hub-sms-input-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding: 12px 0 14px;
+}
+.hub-sms-textarea {
+  flex: 1;
+  resize: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.4;
+  min-height: 38px;
+  max-height: 120px;
+  background: var(--panel);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.hub-sms-textarea:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(249,115,22,0.07); }
+
+/* ── Call mode in hub ───────────────────────────────────────────── */
+.hub-call-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 12px 0 14px;
+}
+
+/* ── Inline contact row ── */
+.hub-call-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--page);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 14px 14px 14px;
+}
+
+.hub-call-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2.5px var(--panel), 0 0 0 3.5px var(--line-strong);
+  transition: box-shadow 0.35s;
+}
+.hub-call-avatar.is-calling {
+  box-shadow: 0 0 0 2.5px var(--panel), 0 0 0 4px var(--green);
+  animation: call-ring-pulse 2s ease-in-out infinite;
+}
+@keyframes call-ring-pulse {
+  0%, 100% { box-shadow: 0 0 0 2.5px var(--panel), 0 0 0 4px var(--green); }
+  50%       { box-shadow: 0 0 0 2.5px var(--panel), 0 0 0 9px var(--green-soft), 0 0 0 4px var(--green); }
+}
+@media (prefers-reduced-motion: reduce) { .hub-call-avatar.is-calling { animation: none; } }
+
+.hub-call-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.hub-call-name { font-size: 14px; font-weight: 600; margin: 0; line-height: 1.3; }
+
+.hub-call-number-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.hub-call-callback-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: var(--red);
+  background: var(--red-soft);
+  border-radius: 6px;
+  padding: 3px 8px;
+  width: fit-content;
+  margin-top: 1px;
+}
+
+.hub-call-cta {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.hub-call-start-btn { white-space: nowrap; }
+
+.hub-call-live {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.hub-call-timer {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hub-call-pulse {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  animation: hub-call-pulse 1.2s ease-in-out infinite;
+}
+@keyframes hub-call-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.65); opacity: 0.5; }
+}
+@media (prefers-reduced-motion: reduce) { .hub-call-pulse { animation: none; } }
+
+.hub-call-end-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.hub-call-end-btn:hover { background: #b91c1c; }
+
+/* ── Call history ── */
+.hub-call-history {
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.hub-call-history-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin: 0 0 6px;
+}
+
+.hub-call-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.hub-call-history-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 12.5px;
+}
+.hub-call-history-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+.hch-icon { flex-shrink: 0; }
+.hch-icon.hch-missed  { color: var(--red); }
+.hch-icon.hch-out     { color: var(--green); }
+
+.hch-contact { font-weight: 500; flex: 1; min-width: 0; }
+.hch-time    { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+.hch-badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.hch-badge.hch-missed { background: var(--red-soft);   color: var(--red); }
+.hch-badge.hch-out    { background: var(--green-soft); color: var(--green); }
+
+/* ── Bell notification ──────────────────────────────────────────── */
+.bell-btn-wrap {
+  position: relative;
+}
+
+.bell-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  border: 2px solid var(--panel);
+  pointer-events: none;
+  animation: badge-in 200ms ease-out;
+}
+@keyframes badge-in {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.bell-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: -8px;
+  width: 356px;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.06);
+  z-index: 60;
+  animation: dropdown-in 150ms ease-out;
+  overflow: hidden;
+}
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.bell-dropdown-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.bell-dropdown-close {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--muted);
+  padding: 2px;
+  border-radius: 4px;
+  transition: color 0.12s, background 0.12s;
+}
+.bell-dropdown-close:hover { color: var(--ink); background: var(--page); }
+
+.bell-alert-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+  transition: background 0.12s;
+}
+.bell-alert-row:last-child { border-bottom: none; }
+.bell-alert-row:hover { background: var(--page); }
+
+.bell-alert-icon { flex-shrink: 0; margin-top: 1px; }
+
+.bell-alert-text {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.45;
+  min-width: 0;
+}
+.bell-alert-time { color: var(--muted); font-size: 12px; }
+
+.bell-alert-action {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--orange);
+  background: none;
+  border: none;
+  padding: 0;
+  white-space: nowrap;
+  align-self: center;
+  transition: text-decoration 0.1s;
+}
+.bell-alert-action:hover { text-decoration: underline; }
+
+.bell-alert-dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  border-radius: 4px;
+  flex-shrink: 0;
+  align-self: center;
+  transition: background 0.12s, color 0.12s;
+}
+.bell-alert-dismiss:hover { background: var(--line); color: var(--ink); }
+
+.bell-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 26px 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ── Overdue task highlight pulse ───────────────────────────────── */
+@keyframes task-pulse {
+  0%, 100% { box-shadow: none; }
+  50%       { box-shadow: 0 0 0 3px rgba(220,38,38,0.25); }
+}
+.task-row-pulse { animation: task-pulse 0.65s ease-in-out 3; }
+
+/* ── Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .bell-dropdown { width: calc(100vw - 20px); right: -4px; }
+}
