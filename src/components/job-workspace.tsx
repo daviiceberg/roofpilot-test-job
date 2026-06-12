@@ -85,6 +85,7 @@ export function JobWorkspace() {
   const [heroModal, setHeroModal] = useState<
     | { type: "call" | "email" | "sms"; contact: Contact }
     | { type: "task" }
+    | { type: "task-create" }
     | null
   >(null);
   const [smsThread, setSmsThread] = useState<SmsMessage[]>(initialSmsThread);
@@ -158,7 +159,7 @@ export function JobWorkspace() {
       },
       ...items
     ]);
-    showToast("✓ Task completed");
+    showToast("Task completed");
   }
 
   function addContact(contact: Contact) {
@@ -167,7 +168,7 @@ export function JobWorkspace() {
     );
     if (!exists) setContacts((items) => [...items, contact]);
     setIsDrawerOpen(false);
-    showToast("✓ Contact added");
+    showToast("Contact added");
     setTimeline((items) => [
       {
         id: Date.now(),
@@ -193,7 +194,7 @@ export function JobWorkspace() {
       time: nowLabel(),
       rep: "Dana Kim"
     }, ...prev]);
-    showToast("✓ Note saved");
+    showToast("Note saved");
   }
 
   function handleHubSendEmail(subject: string, message: string) {
@@ -206,7 +207,7 @@ export function JobWorkspace() {
       direction: "out",
       rep: "Dana Kim"
     }, ...prev]);
-    showToast("✓ Email sent to Hannah Weiss");
+    showToast("Email sent to Hannah Weiss");
   }
 
   function handleHubSendSms(text: string) {
@@ -223,7 +224,7 @@ export function JobWorkspace() {
       rep: "Dana Kim",
       threadId: "main-thread"
     }, ...prev]);
-    showToast("✓ Message sent");
+    showToast("Message sent");
   }
 
   function handleHubCallEnd(durationLabel: string, wasCallback: boolean) {
@@ -239,7 +240,7 @@ export function JobWorkspace() {
       status: "answered"
     }, ...prev]);
     if (wasCallback) setMissedCallCount(0);
-    showToast("✓ Call logged to activity");
+    showToast("Call logged to activity");
   }
 
   function handleHubCreateTask(task: Omit<TaskItem, "id">) {
@@ -253,12 +254,13 @@ export function JobWorkspace() {
       time: nowLabel(),
       rep: "Dana Kim"
     }, ...prev]);
-    showToast("✓ Task created");
+    showToast("Task created");
   }
 
   function handleHeroCallAction(contact: Contact) {
     const fullName = `${contact.firstName} ${contact.lastName}`;
     setHeroModal(null);
+    setMissedCallCount(0);
     setTimeline(prev => [{
       id: Date.now(),
       type: "call",
@@ -270,7 +272,7 @@ export function JobWorkspace() {
       durationLabel: "—",
       status: "answered"
     }, ...prev]);
-    showToast("✓ Call logged successfully");
+    showToast("Call logged successfully");
   }
 
   function handleHeroEmailAction(contact: Contact, subject: string, message: string) {
@@ -285,12 +287,13 @@ export function JobWorkspace() {
       direction: "out",
       rep: "Dana Kim"
     }, ...prev]);
-    showToast("✓ Email sent successfully");
+    showToast("Email sent successfully");
   }
 
   function handleHeroSmsAction(contact: Contact, message: string) {
     const fullName = `${contact.firstName} ${contact.lastName}`;
     setHeroModal(null);
+    setUnansweredSmsCount(0);
     setTimeline(prev => [{
       id: Date.now(),
       type: "sms_out",
@@ -301,12 +304,13 @@ export function JobWorkspace() {
       rep: "Dana Kim",
       threadId: "main-thread"
     }, ...prev]);
-    showToast("✓ SMS sent successfully");
+    showToast("SMS sent successfully");
   }
 
-  function handleHeroTaskComplete() {
-    setHeroModal(null);
-    completeTask(4, "Send updated estimate to adjuster");
+  function handleHeroTaskComplete(taskId: number, taskTitle: string) {
+    completeTask(taskId, taskTitle);
+    const remaining = tasks.filter(t => t.isOverdue && t.id !== taskId);
+    if (remaining.length === 0) setHeroModal(null);
   }
 
   function handleAlertAction(type: string) {
@@ -339,11 +343,12 @@ export function JobWorkspace() {
         ) : null}
 
         <JobHero
-          onCreateProposal={() => showToast("✓ Proposal draft started")}
+          onCreateProposal={() => showToast("Proposal draft started")}
           labels={jobLabels}
           onCall={() => setHeroModal({ type: "call", contact: primaryContact })}
           onEmail={() => setHeroModal({ type: "email", contact: primaryContact })}
           onSms={() => setHeroModal({ type: "sms", contact: primaryContact })}
+          onTask={() => setHeroModal({ type: "task-create" })}
         />
 
         <ContentTabBar
@@ -400,7 +405,7 @@ export function JobWorkspace() {
             {activeTab === "documents" && <DocumentsView />}
             {activeTab === "photos" && <PhotosView />}
             {activeTab === "proposals" && (
-              <ProposalsView onCreateProposal={() => showToast("✓ Proposal draft started")} />
+              <ProposalsView onCreateProposal={() => showToast("Proposal draft started")} />
             )}
             {activeTab === "invoices" && <InvoicesView />}
             {activeTab === "production" && (
@@ -416,7 +421,7 @@ export function JobWorkspace() {
           <aside className="right-rail">
             <AiRecommendations
               onAction={(action) => {
-                if (action === "proposal") showToast("✓ Proposal draft started");
+                if (action === "proposal") showToast("Proposal draft started");
                 if (action === "message") routeToHub("message");
                 if (action === "notes") routeToHub("note");
               }}
@@ -433,6 +438,7 @@ export function JobWorkspace() {
               onCall={c => setHeroModal({ type: "call", contact: c })}
               onEmail={c => setHeroModal({ type: "email", contact: c })}
               onSms={c => setHeroModal({ type: "sms", contact: c })}
+              onViewHistory={() => setActiveTab("activity")}
             />
             <CollapsibleCard
               title="Insurance"
@@ -460,7 +466,17 @@ export function JobWorkspace() {
         )}
 
         {heroModal?.type === "task" && (
-          <HeroTaskModal onClose={() => setHeroModal(null)} onComplete={handleHeroTaskComplete} />
+          <HeroTaskModal
+            tasks={tasks.filter(t => t.isOverdue)}
+            onClose={() => setHeroModal(null)}
+            onComplete={handleHeroTaskComplete}
+          />
+        )}
+        {heroModal?.type === "task-create" && (
+          <HeroTaskCreateModal
+            onClose={() => setHeroModal(null)}
+            onCreate={handleHubCreateTask}
+          />
         )}
         {heroModal?.type === "call" && (
           <HeroCallModal contact={heroModal.contact} onClose={() => setHeroModal(null)} onCall={() => handleHeroCallAction(heroModal.contact)} />
@@ -1019,35 +1035,44 @@ function useModalDismiss(onClose: () => void) {
   }, [onClose]);
 }
 
-function HeroTaskModal({ onClose, onComplete }: { onClose: () => void; onComplete: () => void }) {
+function HeroTaskModal({ tasks, onClose, onComplete }: {
+  tasks: TaskItem[];
+  onClose: () => void;
+  onComplete: (taskId: number, taskTitle: string) => void;
+}) {
   useModalDismiss(onClose);
   return (
     <div className="hero-modal-overlay" onMouseDown={onClose}>
-      <div className="hero-modal" onMouseDown={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Overdue task">
+      <div className="hero-modal" onMouseDown={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Overdue tasks">
         <div className="hero-modal-head">
-          <h3>Overdue Task</h3>
+          <h3>Overdue Tasks{tasks.length > 1 ? ` (${tasks.length})` : ""}</h3>
           <button type="button" className="hero-modal-close" aria-label="Close" onClick={onClose}><X size={16} /></button>
         </div>
         <div className="hero-modal-body">
-          <div className="hero-modal-task-row">
-            <AlertTriangle size={15} className="hero-modal-task-icon" aria-hidden="true" />
-            <div>
-              <p className="hero-modal-task-title">Send updated estimate to adjuster</p>
-              <p className="hero-modal-muted">Due Jun 9, 2026 · 2 days overdue</p>
+          {tasks.map(task => (
+            <div key={task.id} className="hero-modal-task-row">
+              <AlertTriangle size={15} className="hero-modal-task-icon" aria-hidden="true" />
+              <div style={{ flex: 1 }}>
+                <p className="hero-modal-task-title">{task.title}</p>
+                {task.dueDate && <p className="hero-modal-muted">Due {task.dueDate} · Overdue</p>}
+                <div className="hero-modal-task-meta">
+                  {task.tags?.map(tag => <span key={tag} className="hero-modal-task-tag">{tag}</span>)}
+                  {task.priority && (
+                    <span className="hero-modal-task-priority">
+                      {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)} priority
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button type="button" className="button primary compact" onClick={() => onComplete(task.id, task.title)}>
+                <Check size={13} aria-hidden="true" />
+                Done
+              </button>
             </div>
-          </div>
-          <div className="hero-modal-task-meta">
-            <span className="hero-modal-task-tag">Estimate</span>
-            <span className="hero-modal-task-tag">Adjuster</span>
-            <span className="hero-modal-task-priority">High priority</span>
-          </div>
+          ))}
         </div>
         <div className="hero-modal-actions">
-          <button type="button" className="button ghost" onClick={onClose}>Cancel</button>
-          <button type="button" className="button primary" onClick={onComplete}>
-            <Check size={14} aria-hidden="true" />
-            Mark as Done
-          </button>
+          <button type="button" className="button ghost" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>
@@ -1178,19 +1203,103 @@ function HeroSmsModal({ contact, onClose, onSend }: { contact: Contact; onClose:
   );
 }
 
+function HeroTaskCreateModal({ onClose, onCreate }: {
+  onClose: () => void;
+  onCreate: (task: Omit<TaskItem, "id">) => void;
+}) {
+  useModalDismiss(onClose);
+  const [title, setTitle] = useState("");
+  const [priority, setPriority] = useState<TaskPriority | "">("");
+  const [dueDate, setDueDate] = useState(new Date().toISOString().slice(0, 10));
+  const [assignee, setAssignee] = useState("Dana Kim");
+  const [tags, setTags] = useState("");
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!title.trim()) return;
+    const parsedDate = dueDate
+      ? new Date(dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : undefined;
+    const parsedTags = tags ? tags.split(",").map(t => t.trim()).filter(Boolean) : undefined;
+    onCreate({ title: title.trim(), priority: priority || undefined, dueDate: parsedDate, tags: parsedTags });
+    onClose();
+  }
+
+  return (
+    <div className="hero-modal-overlay" onMouseDown={onClose}>
+      <div className="hero-modal hero-modal-wide" onMouseDown={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Create task">
+        <div className="hero-modal-head">
+          <h3>Create Task</h3>
+          <button type="button" className="hero-modal-close" aria-label="Close" onClick={onClose}><X size={16} /></button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="hero-modal-body">
+            <div className="hero-modal-field">
+              <label htmlFor="htc-title">Task</label>
+              <input
+                id="htc-title"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="What needs to happen?"
+                autoFocus
+                required
+              />
+            </div>
+            <div className="hero-modal-two-col">
+              <div className="hero-modal-field">
+                <label htmlFor="htc-priority">Priority</label>
+                <select id="htc-priority" value={priority} onChange={e => setPriority(e.target.value as TaskPriority | "")}>
+                  <option value="">No priority</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+              <div className="hero-modal-field">
+                <label htmlFor="htc-date">Due date</label>
+                <input id="htc-date" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+              </div>
+            </div>
+            <div className="hero-modal-field">
+              <label htmlFor="htc-assignee">Assigned to</label>
+              <select id="htc-assignee" value={assignee} onChange={e => setAssignee(e.target.value)}>
+                <option>Dana Kim</option>
+                <option>Unassigned</option>
+              </select>
+            </div>
+            <div className="hero-modal-field">
+              <label htmlFor="htc-tags">Tags <span className="hero-modal-field-hint">(comma separated)</span></label>
+              <input id="htc-tags" value={tags} onChange={e => setTags(e.target.value)} placeholder="e.g. estimate, homeowner" />
+            </div>
+          </div>
+          <div className="hero-modal-actions">
+            <button type="button" className="button ghost" onClick={onClose}>Cancel</button>
+            <button type="submit" className="button primary" disabled={!title.trim()}>
+              <ClipboardList size={14} aria-hidden="true" />
+              Create Task
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 /* ── Job Hero (slim — inline contact icons) ─────────────────────── */
 function JobHero({
   onCreateProposal,
   labels = [],
   onCall,
   onEmail,
-  onSms
+  onSms,
+  onTask
 }: {
   onCreateProposal: () => void;
   labels?: string[];
   onCall: () => void;
   onEmail: () => void;
   onSms: () => void;
+  onTask: () => void;
 }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const photoSrc = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=90";
@@ -1253,6 +1362,15 @@ function JobHero({
                   onClick={onSms}
                 >
                   <MessageSquare size={15} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="hero-icon-btn"
+                  title="Create task"
+                  aria-label="Create task"
+                  onClick={onTask}
+                >
+                  <ClipboardList size={15} aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -1716,11 +1834,12 @@ function AiRecommendations({ onAction }: { onAction: (action: AiAction) => void 
 }
 
 /* ── Contact Block ─────────────────────────────────────────────── */
-function ContactBlock({ contact, onCall, onEmail, onSms }: {
+function ContactBlock({ contact, onCall, onEmail, onSms, onViewHistory }: {
   contact: Contact;
   onCall: (c: Contact) => void;
   onEmail: (c: Contact) => void;
   onSms: (c: Contact) => void;
+  onViewHistory: (c: Contact) => void;
 }) {
   return (
     <article className="contact-block">
@@ -1747,7 +1866,7 @@ function ContactBlock({ contact, onCall, onEmail, onSms }: {
           <button type="button" className="icon-button small" aria-label={`Message ${contact.firstName}`} title="Message" onClick={() => onSms(contact)}>
             <MessageSquare size={14} />
           </button>
-          <button type="button" className="icon-button small" aria-label={`View history for ${contact.firstName}`} title="View history">
+          <button type="button" className="icon-button small" aria-label={`View history for ${contact.firstName}`} title="View history" onClick={() => onViewHistory(contact)}>
             <FileText size={14} />
           </button>
         </div>
@@ -1757,12 +1876,13 @@ function ContactBlock({ contact, onCall, onEmail, onSms }: {
 }
 
 /* ── Contacts Card ─────────────────────────────────────────────── */
-function ContactsCard({ contacts, openDrawer, onCall, onEmail, onSms }: {
+function ContactsCard({ contacts, openDrawer, onCall, onEmail, onSms, onViewHistory }: {
   contacts: Contact[];
   openDrawer: () => void;
   onCall: (c: Contact) => void;
   onEmail: (c: Contact) => void;
   onSms: (c: Contact) => void;
+  onViewHistory: (c: Contact) => void;
 }) {
   const [open, setOpen] = useState(false);
   const total = contacts.length + 1;
@@ -1793,9 +1913,9 @@ function ContactsCard({ contacts, openDrawer, onCall, onEmail, onSms }: {
                 Add another contact
               </button>
             </div>
-            <ContactBlock contact={primaryContact} onCall={onCall} onEmail={onEmail} onSms={onSms} />
+            <ContactBlock contact={primaryContact} onCall={onCall} onEmail={onEmail} onSms={onSms} onViewHistory={onViewHistory} />
             {contacts.map((contact) => (
-              <ContactBlock key={`${contact.email}-${contact.phone}`} contact={contact} onCall={onCall} onEmail={onEmail} onSms={onSms} />
+              <ContactBlock key={`${contact.email}-${contact.phone}`} contact={contact} onCall={onCall} onEmail={onEmail} onSms={onSms} onViewHistory={onViewHistory} />
             ))}
           </>
         )}

@@ -1528,26 +1528,27 @@ textarea,
 .toast {
   position: fixed;
   z-index: 200;
-  top: 20px;
-  right: 20px;
+  top: 24px;
+  right: 24px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border-radius: var(--radius);
-  background: #fff;
-  border: 1px solid rgba(22, 163, 74, 0.18);
-  border-left: 3px solid var(--green);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.06);
-  color: var(--ink);
-  font-size: 13px;
-  font-weight: 500;
+  gap: 10px;
+  padding: 14px 22px;
+  border-radius: 12px;
+  background: var(--green);
+  border: none;
+  box-shadow: 0 8px 28px rgba(22, 163, 74, 0.4), 0 2px 8px rgba(0, 0, 0, 0.12);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   pointer-events: none;
-  animation: toast-slide-in 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-width: 220px;
+  animation: toast-slide-in 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .toast svg {
-  color: var(--green);
+  color: #fff;
   flex-shrink: 0;
 }
 
@@ -1816,9 +1817,11 @@ textarea,
   }
 
   .toast-top {
-    top: 12px;
-    right: 12px;
-    left: 12px;
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    min-width: unset;
+    justify-content: center;
   }
 
   .presentation-slide {
@@ -3624,6 +3627,26 @@ textarea,
 
 .hero-modal-field { display: flex; flex-direction: column; gap: 6px; }
 .hero-modal-field label { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.hero-modal-field select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--panel);
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.hero-modal-field select:focus { border-color: var(--orange); }
+.hero-modal-field-hint { font-weight: 400; color: var(--muted); }
+.hero-modal-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
 .hero-modal-field input,
 .hero-modal-field textarea {
   width: 100%;
@@ -3671,7 +3694,9 @@ textarea,
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 14px;
+  margin-bottom: 10px;
 }
+.hero-modal-task-row:last-child { margin-bottom: 0; }
 .hero-modal-task-icon { color: var(--red); flex-shrink: 0; margin-top: 1px; }
 .hero-modal-task-title { font-size: 14px; font-weight: 600; margin: 0; }
 
