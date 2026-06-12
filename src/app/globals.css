@@ -764,6 +764,7 @@ select:focus-visible {
   margin-top: 8px;
   border-left: 3px solid var(--orange);
   background: linear-gradient(90deg, #fff7ed 0%, #fff 50%);
+  border-radius: 8px;
 }
 
 .next-step-label {
@@ -975,16 +976,16 @@ textarea,
 
 .timeline-card {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  gap: 12px;
-  padding: var(--space-card);
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  padding: 9px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel-soft);
 }
 
 .timeline-card + .timeline-card {
-  margin-top: var(--space-related);
+  margin-top: 4px;
 }
 
 .timeline-card.tl-proposal {
@@ -1008,11 +1009,11 @@ textarea,
 
 .timeline-icon {
   display: inline-flex;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 .tl-note { color: #7c3aed; background: #f5f3ff; }
@@ -1033,12 +1034,13 @@ textarea,
 }
 
 .timeline-top h3 {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .timeline-content p {
-  margin-top: 4px;
+  margin-top: 2px;
+  font-size: 12.5px;
 }
 
 /* Workflow */
@@ -1160,7 +1162,7 @@ textarea,
   padding: 12px 14px;
   border-left: 3px solid var(--orange);
   background: var(--orange-soft);
-  border-radius: 0 8px 8px 0;
+  border-radius: 8px;
   margin-bottom: 0;
   display: flex;
   flex-direction: column;
@@ -3477,8 +3479,8 @@ textarea,
 .tl-pill-unanswered { background: var(--amber-soft); color: var(--amber); border: 1px solid rgba(217,119,6,0.2); }
 
 /* Timeline rep + action link */
-.tl-rep { font-size: 11px; color: var(--muted); margin-top: 2px; }
-.tl-action-link { margin-top: 6px; display: inline-block; font-size: 12px; }
+.tl-rep { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.tl-action-link { margin-top: 3px; display: inline-block; font-size: 12px; }
 
 /* Call inline expand */
 .call-expand-row {
