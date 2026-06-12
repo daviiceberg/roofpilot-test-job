@@ -102,7 +102,7 @@ export function AppShell({
       <div className="app-main">
         <header className="top-bar">
           <div className="top-bar-left">
-            <span className="product-logo">RoofPilot</span>
+            <img src="/roofpilot-logo.webp" alt="RoofPilot" className="product-logo" />
             <label className="search-field">
               <Search size={16} aria-hidden="true" />
               <input type="search" placeholder="Search jobs, contacts, claims…" aria-label="Search" />
